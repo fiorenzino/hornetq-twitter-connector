@@ -19,7 +19,6 @@ import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.impl.IncomingTweetsHandler;
 
-
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,7 +33,8 @@ public class TwitterIncomingConnectorServiceFactory implements
 			final Map<String, Object> configuration,
 			final StorageManager storageManager, final PostOffice postOffice,
 			final ScheduledExecutorService scheduledThreadPool) {
-		return new IncomingTweetsHandler(connectorName, configuration, storageManager, postOffice);
+		return new IncomingTweetsHandler(connectorName, configuration,
+				storageManager, postOffice);
 	}
 
 	public Set<String> getAllowableProperties() {

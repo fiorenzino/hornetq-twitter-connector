@@ -34,30 +34,27 @@ public class TwitterUserStreamDefaultListener extends
 
 	@Override
 	public void onStatus(Status status) {
-		System.out.println("GOT STATUS: " + status.toString());
 		ServerMessage msg = buildMessage(status);
 		try {
 			this.postOffice.route(msg, false);
 		} catch (Exception e) {
-			log.error("Error TwitterUserStreamDefaultImpl.onStatus", e);
+			log.error("Error on TwitterUserStreamDefaultListener.onStatus", e);
 		}
 	}
 
 	@Override
 	public void onDirectMessage(DirectMessage directMessage) {
-		System.out.println("GOT DM: " + directMessage.toString());
-
 		ServerMessage msg = buildMessage(directMessage);
 		try {
 			this.postOffice.route(msg, false);
 		} catch (Exception e) {
-			log.error("Error TwitterUserStreamDefaultImpl.onDirectMessage", e);
+			log.error("Error on TwitterUserStreamDefaultListener.onDirectMessage", e);
 		}
 	}
 
 	@Override
 	public void onException(Exception ex) {
-		log.error("Got TwitterUserStreamDefaultImpl.onException", ex);
+		log.error("Got TwitterUserStreamDefaultListener.onException", ex);
 	}
 
 	@Override
