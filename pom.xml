@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>br.com.porcelli.hornetq</groupId>
+	<artifactId>twitter.extension</artifactId>
+	<packaging>pom</packaging>
+	<name>Porcelli's HornetQ Twitter Streaming Extension</name>
+	<version>1.0.0</version>
+	<url>http://porcelli.com.br</url>
+	<developers>
+		<developer>
+			<name>Alexandre Porcelli</name>
+			<email>alexandre.porcelli@gmail.com</email>
+		</developer>
+	</developers>
+	<organization>
+		<name>Alexandre Porcelli</name>
+		<url>http://porcelli.com.br</url>
+	</organization>
+	<properties>
+		<hornetq.version>2.1.2.Final</hornetq.version>
+		<twitter4j.version>2.1.8</twitter4j.version>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>http://repository.jboss.org/nexus/content/groups/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>twitter4j.org</id>
+			<name>twitter4j.org Repository</name>
+			<url>http://twitter4j.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<modules>
+		<module>twitter-common-model</module>
+		<module>twitter-streaming-extensions</module>
+	</modules>
+	<build>
+		<plugins>
+			<!-- Compiler plugin enforces Java 1.6 compatiblity -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencyManagement>
+		<dependencies>
+			<!-- Internal Dependency -->
+			<dependency>
+				<groupId>br.com.porcelli.hornetq</groupId>
+				<artifactId>twitter-common-model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Twitter -->
+			<dependency>
+				<groupId>org.twitter4j</groupId>
+				<artifactId>twitter4j-core</artifactId>
+				<version>${twitter4j.version}</version>
+			</dependency>
+			<!-- HornetQ -->
+			<dependency>
+				<groupId>org.hornetq</groupId>
+				<artifactId>hornetq-core</artifactId>
+				<version>${hornetq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hornetq</groupId>
+				<artifactId>hornetq-jms-client</artifactId>
+				<version>${hornetq.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>
