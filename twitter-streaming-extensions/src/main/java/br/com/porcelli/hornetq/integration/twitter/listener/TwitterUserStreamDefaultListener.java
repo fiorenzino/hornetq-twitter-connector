@@ -1,4 +1,4 @@
-package br.com.porcelli.hornetq.integration.twitter.impl;
+package br.com.porcelli.hornetq.integration.twitter.listener;
 
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
@@ -12,31 +12,26 @@ import twitter4j.GeoLocation;
 import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.User;
+import twitter4j.UserStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants.MessageType;
 
 public class TwitterUserStreamDefaultListener extends
-		AbstractTwitterUserStreamListener {
+		AbstractBaseStreamListener implements UserStreamListener {
 	private static final Logger log = Logger
 			.getLogger(TwitterUserStreamDefaultListener.class);
 
-	private final PostOffice postOffice;
-	private final StorageManager storageManager;
-	private final String queueName;
-
 	public TwitterUserStreamDefaultListener(PostOffice postOffice,
 			StorageManager storageManager, String queueName) {
-		this.postOffice = postOffice;
-		this.storageManager = storageManager;
-		this.queueName = queueName;
+		super(postOffice, storageManager, queueName);
 	}
 
 	@Override
 	public void onStatus(Status status) {
 		ServerMessage msg = buildMessage(status);
 		try {
-			this.postOffice.route(msg, false);
+			getPostOffice().route(msg, false);
 		} catch (Exception e) {
 			log.error("Error on TwitterUserStreamDefaultListener.onStatus", e);
 		}
@@ -46,9 +41,11 @@ public class TwitterUserStreamDefaultListener extends
 	public void onDirectMessage(DirectMessage directMessage) {
 		ServerMessage msg = buildMessage(directMessage);
 		try {
-			this.postOffice.route(msg, false);
+			getPostOffice().route(msg, false);
 		} catch (Exception e) {
-			log.error("Error on TwitterUserStreamDefaultListener.onDirectMessage", e);
+			log.error(
+					"Error on TwitterUserStreamDefaultListener.onDirectMessage",
+					e);
 		}
 	}
 
@@ -63,10 +60,10 @@ public class TwitterUserStreamDefaultListener extends
 
 	private ServerMessage buildMessage(final Status status) {
 
-		final ServerMessage msg = new ServerMessageImpl(
-				this.storageManager.generateUniqueID(),
+		final ServerMessage msg = new ServerMessageImpl(getStorageManager()
+				.generateUniqueID(),
 				InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
-		msg.setAddress(new SimpleString(this.queueName));
+		msg.setAddress(new SimpleString(getQueueName()));
 		msg.setDurable(true);
 		msg.encodeMessageIDToBuffer();
 
@@ -115,10 +112,10 @@ public class TwitterUserStreamDefaultListener extends
 
 	private ServerMessage buildMessage(final DirectMessage dm) {
 
-		final ServerMessage msg = new ServerMessageImpl(
-				this.storageManager.generateUniqueID(),
+		final ServerMessage msg = new ServerMessageImpl(getStorageManager()
+				.generateUniqueID(),
 				InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
-		msg.setAddress(new SimpleString(this.queueName));
+		msg.setAddress(new SimpleString(getQueueName()));
 		msg.setDurable(true);
 		msg.encodeMessageIDToBuffer();
 

@@ -42,6 +42,8 @@ public class InternalTwitterConstants implements TwitterConstants {
 	public static final String ACCESS_TOKEN_SECRET = "accessTokenSecret";
 	public static final String QUEUE_NAME = "queue";
 
+	public static final String STREAM_LISTENERS = "streamListeners";
+
 	static {
 		ALLOWABLE_INCOMING_CONNECTOR_KEYS = new HashSet<String>();
 		ALLOWABLE_INCOMING_CONNECTOR_KEYS.add(CONSUMER_KEY);
@@ -49,6 +51,7 @@ public class InternalTwitterConstants implements TwitterConstants {
 		ALLOWABLE_INCOMING_CONNECTOR_KEYS.add(ACCESS_TOKEN);
 		ALLOWABLE_INCOMING_CONNECTOR_KEYS.add(ACCESS_TOKEN_SECRET);
 		ALLOWABLE_INCOMING_CONNECTOR_KEYS.add(QUEUE_NAME);
+		ALLOWABLE_INCOMING_CONNECTOR_KEYS.add(STREAM_LISTENERS);
 
 		REQUIRED_INCOMING_CONNECTOR_KEYS = new HashSet<String>();
 		REQUIRED_INCOMING_CONNECTOR_KEYS.add(CONSUMER_KEY);
