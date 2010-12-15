@@ -69,17 +69,20 @@ public class OutgoingTweetsHandler implements Consumer, ConnectorService {
 	public OutgoingTweetsHandler(final String connectorName,
 			final Map<String, Object> configuration, final PostOffice postOffice) {
 		this.connectorName = connectorName;
-		this.consumerKey = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.CONSUMER_KEY, null, configuration);
+		this.consumerKey = ConfigurationHelper
+				.getStringProperty(InternalTwitterConstants.PROP_CONSUMER_KEY,
+						null, configuration);
 		this.consumerSecret = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.CONSUMER_SECRET, null, configuration);
-		this.accessToken = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.ACCESS_TOKEN, null, configuration);
+				InternalTwitterConstants.PROP_CONSUMER_SECRET, null,
+				configuration);
+		this.accessToken = ConfigurationHelper
+				.getStringProperty(InternalTwitterConstants.PROP_ACCESS_TOKEN,
+						null, configuration);
 		this.accessTokenSecret = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.ACCESS_TOKEN_SECRET, null,
+				InternalTwitterConstants.PROP_ACCESS_TOKEN_SECRET, null,
 				configuration);
 		this.queueName = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.QUEUE_NAME, null, configuration);
+				InternalTwitterConstants.PROP_QUEUE_NAME, null, configuration);
 		this.postOffice = postOffice;
 	}
 

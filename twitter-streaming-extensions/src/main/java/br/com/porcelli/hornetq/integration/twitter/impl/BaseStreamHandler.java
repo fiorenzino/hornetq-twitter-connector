@@ -13,34 +13,34 @@ import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ConnectorService;
 import org.hornetq.utils.ConfigurationHelper;
 
+import twitter4j.TwitterException;
 import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.listener.AbstractBaseStreamListener;
 
-public class IncomingTweetsHandler implements ConnectorService {
-	private static final Logger log = Logger
-			.getLogger(IncomingTweetsHandler.class);
+public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
+		implements ConnectorService {
+	private static final Logger log = Logger.getLogger(BaseStreamHandler.class);
 
-	private final String connectorName;
+	protected final String connectorName;
 
-	private final String queueName;
+	protected final String queueName;
 
-	private final Configuration conf;
+	protected final Configuration conf;
 
-	private final StorageManager storageManager;
+	protected final StorageManager storageManager;
 
-	private final PostOffice postOffice;
+	protected final PostOffice postOffice;
 
-	private TwitterStream twitterStream;
+	protected TwitterStream twitterStream;
 
-	private final Set<Class<? extends AbstractBaseStreamListener>> listeners;
+	protected final Set<Class<T>> listeners;
 
-	private boolean isStarted = false;
+	protected boolean isStarted = false;
 
-	public IncomingTweetsHandler(final String connectorName,
+	public BaseStreamHandler(final String connectorName,
 			final Map<String, Object> configuration,
 			final StorageManager storageManager, final PostOffice postOffice) {
 		this.connectorName = connectorName;
@@ -48,47 +48,45 @@ public class IncomingTweetsHandler implements ConnectorService {
 		this.conf = new ConfigurationBuilder()
 				.setOAuthConsumerKey(
 						ConfigurationHelper.getStringProperty(
-								InternalTwitterConstants.CONSUMER_KEY, null,
-								configuration))
+								InternalTwitterConstants.PROP_CONSUMER_KEY,
+								null, configuration))
 				.setOAuthConsumerSecret(
 						ConfigurationHelper.getStringProperty(
-								InternalTwitterConstants.CONSUMER_SECRET, null,
-								configuration))
+								InternalTwitterConstants.PROP_CONSUMER_SECRET,
+								null, configuration))
 				.setOAuthAccessToken(
 						ConfigurationHelper.getStringProperty(
-								InternalTwitterConstants.ACCESS_TOKEN, null,
-								configuration))
+								InternalTwitterConstants.PROP_ACCESS_TOKEN,
+								null, configuration))
 				.setOAuthAccessTokenSecret(
-						ConfigurationHelper.getStringProperty(
-								InternalTwitterConstants.ACCESS_TOKEN_SECRET,
-								null, configuration)).build();
+						ConfigurationHelper
+								.getStringProperty(
+										InternalTwitterConstants.PROP_ACCESS_TOKEN_SECRET,
+										null, configuration)).build();
 
 		this.queueName = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.QUEUE_NAME, null, configuration);
+				InternalTwitterConstants.PROP_QUEUE_NAME, null, configuration);
 
 		this.storageManager = storageManager;
 		this.postOffice = postOffice;
 		String listners = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.STREAM_LISTENERS, null, configuration);
+				InternalTwitterConstants.PROP_STREAM_LISTENERS, null,
+				configuration);
 		if (listners == null || listners.trim().length() == 0) {
 			this.listeners = null;
 		} else {
 			this.listeners = getListeners(listners);
 		}
-
 	}
 
-	private Set<Class<? extends AbstractBaseStreamListener>> getListeners(
-			String listners) {
-		Set<Class<? extends AbstractBaseStreamListener>> result = new HashSet<Class<? extends AbstractBaseStreamListener>>();
-		listners.replaceAll(",", ";");
-		listners.replaceAll(":", ";");
+	protected Set<Class<T>> getListeners(final String listners) {
+		Set<Class<T>> result = new HashSet<Class<T>>();
 
-		for (String activeListner : listners.split(";")) {
+		for (String activeListner : splitProperty(listners)) {
 			try {
 				Class<?> clazz = Class.forName(activeListner);
 				if (AbstractBaseStreamListener.class.isAssignableFrom(clazz)) {
-					result.add((Class<? extends AbstractBaseStreamListener>) clazz);
+					result.add((Class<T>) clazz);
 				}
 			} catch (ClassNotFoundException e) {
 				log.error("Twitter Listener '" + activeListner + "' not found");
@@ -98,6 +96,14 @@ public class IncomingTweetsHandler implements ConnectorService {
 			return result;
 		}
 		return null;
+	}
+
+	protected String[] splitProperty(final String propertyValue) {
+		if (propertyValue == null || propertyValue.trim().length() == 0) {
+			return null;
+		}
+
+		return propertyValue.replace(',', ';').replace(':', ';').split(";");
 	}
 
 	public String getName() {
@@ -115,21 +121,14 @@ public class IncomingTweetsHandler implements ConnectorService {
 			return;
 		}
 
-		this.twitterStream = new TwitterStreamFactory(conf).getInstance();
-		for (Class<? extends AbstractBaseStreamListener> activeListener : listeners) {
-			AbstractBaseStreamListener newListener = buildListenerInstance(activeListener);
-			if (newListener != null) {
-				this.twitterStream.addListener(newListener);
-			}
-		}
-
-		twitterStream.user();
+		startStreaming();
 
 		isStarted = true;
 	}
 
-	public <T extends AbstractBaseStreamListener> T buildListenerInstance(
-			Class<T> clazz) {
+	protected abstract void startStreaming() throws TwitterException;
+
+	public T buildListenerInstance(Class<T> clazz) {
 		T listener = null;
 		Class<?>[] constructorArgs = new Class[] { PostOffice.class,
 				StorageManager.class, String.class };

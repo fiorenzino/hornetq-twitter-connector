@@ -12,36 +12,32 @@
  */
 package br.com.porcelli.hornetq.integration.twitter;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ConnectorService;
 import org.hornetq.core.server.ConnectorServiceFactory;
 
-import br.com.porcelli.hornetq.integration.twitter.impl.IncomingTweetsHandler;
+import br.com.porcelli.hornetq.integration.twitter.impl.StatusStreamHandler;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-
-/**
- * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a> Created Jun
- *         29, 2010
- */
-public class TwitterIncomingConnectorServiceFactory implements
+public class TwitterStatusStreamConnectorServiceFactory implements
 		ConnectorServiceFactory {
 	public ConnectorService createConnectorService(String connectorName,
 			final Map<String, Object> configuration,
 			final StorageManager storageManager, final PostOffice postOffice,
 			final ScheduledExecutorService scheduledThreadPool) {
-		return new IncomingTweetsHandler(connectorName, configuration,
+		return new StatusStreamHandler(connectorName, configuration,
 				storageManager, postOffice);
 	}
 
 	public Set<String> getAllowableProperties() {
-		return InternalTwitterConstants.ALLOWABLE_INCOMING_CONNECTOR_KEYS;
+		return InternalTwitterConstants.ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
 	}
 
 	public Set<String> getRequiredProperties() {
-		return InternalTwitterConstants.REQUIRED_INCOMING_CONNECTOR_KEYS;
+		return InternalTwitterConstants.REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
 	}
 }
