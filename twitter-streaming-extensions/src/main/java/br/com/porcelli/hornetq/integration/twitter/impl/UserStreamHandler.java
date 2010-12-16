@@ -21,7 +21,7 @@ public class UserStreamHandler extends
     }
 
     @Override
-    protected void startStreaming(final Long lastTweetId)
+    protected void startStreaming(Long lastTweetId)
         throws TwitterException {
         twitterStream = new TwitterStreamFactory(conf).getInstance();
         for (final Class<? extends AbstractUserBaseStreamListener> activeListener: listeners) {

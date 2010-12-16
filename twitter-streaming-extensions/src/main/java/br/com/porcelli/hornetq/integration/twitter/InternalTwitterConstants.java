@@ -16,6 +16,8 @@ package br.com.porcelli.hornetq.integration.twitter;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hornetq.api.core.SimpleString;
+
 /**
  * A TwitterConstants
  * 
@@ -23,37 +25,38 @@ import java.util.Set;
  */
 public class InternalTwitterConstants implements TwitterConstants {
 
-    public static final String      LAST_ID                       = "last.id";
+    public static final String       LAST_ID                       = "last.id";
+    public static final SimpleString LAST_ID_VALUE                 = new SimpleString("last_tweet");
 
-    public static final int         DEFAULT_POLLING_INTERVAL_SECS = 10;
-    public static final int         DEFAULT_PAGE_SIZE             = 100;
-    public static final int         FIRST_ATTEMPT_PAGE_SIZE       = 1;
-    public static final int         START_SINCE_ID                = 1;
-    public static final int         INITIAL_MESSAGE_BUFFER_SIZE   = 70;
+    public static final int          DEFAULT_POLLING_INTERVAL_SECS = 10;
+    public static final int          DEFAULT_PAGE_SIZE             = 100;
+    public static final int          FIRST_ATTEMPT_PAGE_SIZE       = 1;
+    public static final int          START_SINCE_ID                = 1;
+    public static final int          INITIAL_MESSAGE_BUFFER_SIZE   = 70;
 
-    public static final Set<String> ALLOWABLE_USER_STREAM_CONNECTOR_KEYS;
-    public static final Set<String> REQUIRED_USER_STREAM_CONNECTOR_KEYS;
+    public static final Set<String>  ALLOWABLE_USER_STREAM_CONNECTOR_KEYS;
+    public static final Set<String>  REQUIRED_USER_STREAM_CONNECTOR_KEYS;
 
-    public static final Set<String> ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
-    public static final Set<String> REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
+    public static final Set<String>  ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
+    public static final Set<String>  REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
 
-    public static final Set<String> ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
-    public static final Set<String> REQUIRED_OUTGOING_CONNECTOR_KEYS;
+    public static final Set<String>  ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
+    public static final Set<String>  REQUIRED_OUTGOING_CONNECTOR_KEYS;
 
-    public static final String      PROP_CONSUMER_KEY             = "consumerKey";
-    public static final String      PROP_CONSUMER_SECRET          = "consumerSecret";
-    public static final String      PROP_ACCESS_TOKEN             = "accessToken";
-    public static final String      PROP_ACCESS_TOKEN_SECRET      = "accessTokenSecret";
-    public static final String      PROP_QUEUE_NAME               = "queue";
+    public static final String       PROP_CONSUMER_KEY             = "consumerKey";
+    public static final String       PROP_CONSUMER_SECRET          = "consumerSecret";
+    public static final String       PROP_ACCESS_TOKEN             = "accessToken";
+    public static final String       PROP_ACCESS_TOKEN_SECRET      = "accessTokenSecret";
+    public static final String       PROP_QUEUE_NAME               = "queue";
 
-    public static final String      PROP_LAST_TWEET_QUEUE_NAME    = "lastTweetQueue";
+    public static final String       PROP_LAST_TWEET_QUEUE_NAME    = "lastTweetQueue";
 
     // STREAM
-    public static final String      PROP_STREAM_LISTENERS         = "streamListeners";
+    public static final String       PROP_STREAM_LISTENERS         = "streamListeners";
 
     // FILTER
-    public static final String      PROP_MENTIONED_USERS          = "mentionedUsers";
-    public static final String      PROP_HASHTAGS                 = "hashtags";
+    public static final String       PROP_MENTIONED_USERS          = "mentionedUsers";
+    public static final String       PROP_HASHTAGS                 = "hashtags";
 
     static {
         ALLOWABLE_USER_STREAM_CONNECTOR_KEYS = new HashSet<String>();

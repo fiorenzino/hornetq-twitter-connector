@@ -2,6 +2,7 @@ package br.com.porcelli.hornetq.integration.twitter.impl;
 
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -134,15 +135,18 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             log.warn("There is no Listners, can't start the service.");
             return;
         }
+
         Long lastTweetId = null;
         if (lastTweetQueueName != null) {
-            final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(
-                    lastTweetQueueName));
+            final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastTweetQueueName));
             if (lastTweetBinding != null) {
                 final Queue lastTweetQueue = (Queue) lastTweetBinding.getBindable();
                 if (lastTweetQueue.getMessageCount() > 0) {
-                    final MessageReference msg = lastTweetQueue.iterator().next();
-                    lastTweetId = msg.getMessage().getLongProperty(InternalTwitterConstants.LAST_ID);
+                    for (Iterator<MessageReference> iterator = lastTweetQueue.iterator(); iterator.hasNext();) {
+                        final MessageReference msg = iterator.next();
+                        System.out.println("Message Value: " + msg.getMessage().getStringProperty("last.tweet.id"));
+                        lastTweetId = Long.valueOf(msg.getMessage().getStringProperty("last.tweet.id"));
+                    }
                     lastTweetQueue.deleteAllReferences();
                 }
             }
@@ -158,7 +162,7 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
 
     protected void loadDirectMessages(final long lastTweetId, final Twitter twitter)
         throws TwitterException {
-        int page = 0;
+        int page = 1;
         while (true) {
             Paging paging = new Paging(page, lastTweetId);
             ResponseList<DirectMessage> rl = twitter.getDirectMessages(paging);
@@ -175,9 +179,10 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
 
     protected void loadQuery(final String query, final long lastTweetId, final Twitter twitter)
         throws TwitterException {
+        System.out.println("QUERY: " + query);
         final Query qry = new Query(query);
         qry.setSinceId(lastTweetId);
-        int page = 0;
+        int page = 1;
         while (true) {
             qry.setPage(page);
             QueryResult qr = twitter.search(qry);
@@ -190,11 +195,13 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             }
             page++;
         }
+        System.out.println("DONE WITH QUERY!");
     }
 
     protected void loadUserTimeline(final long lastTweetId, final Twitter twitter)
         throws TwitterException {
-        int page = 0;
+        System.out.println("USER TIMELINE");
+        int page = 1;
         while (true) {
             Paging paging = new Paging(page, lastTweetId);
             ResponseList<Status> rl = twitter.getUserTimeline(paging);
@@ -207,6 +214,7 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             }
             page++;
         }
+        System.out.println("DONE WITH USER TIMELINE");
     }
 
     public T buildListenerInstance(final Class<T> clazz) {
