@@ -17,65 +17,92 @@ import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.listener.AbstractStatusBaseStreamListener;
 
 public class StatusStreamHandler extends
-		BaseStreamHandler<AbstractStatusBaseStreamListener> {
+        BaseStreamHandler<AbstractStatusBaseStreamListener> {
 
-	private final String[] mentionedUsers;
-	private final String[] hashTags;
+    private final String[] mentionedUsers;
+    private final String[] hashTags;
 
-	public StatusStreamHandler(final String connectorName,
-			final Map<String, Object> configuration,
-			final StorageManager storageManager, final PostOffice postOffice) {
-		super(connectorName, configuration, storageManager, postOffice);
+    public StatusStreamHandler(final String connectorName,
+                               final Map<String, Object> configuration,
+                               final StorageManager storageManager, final PostOffice postOffice) {
+        super(connectorName, configuration, storageManager, postOffice);
 
-		this.mentionedUsers = splitProperty(ConfigurationHelper
-				.getStringProperty(
-						InternalTwitterConstants.PROP_MENTIONED_USERS, null,
-						configuration));
+        mentionedUsers = splitProperty(ConfigurationHelper
+                .getStringProperty(
+                        InternalTwitterConstants.PROP_MENTIONED_USERS, null,
+                        configuration));
 
-		this.hashTags = splitProperty(ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.PROP_HASHTAGS, null, configuration));
+        hashTags =
+            splitProperty(ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_HASHTAGS, null, configuration));
 
-	}
+    }
 
-	protected void startStreaming() throws TwitterException {
-		this.twitterStream = new TwitterStreamFactory(conf).getInstance();
-		for (Class<? extends AbstractStatusBaseStreamListener> activeListener : listeners) {
-			AbstractStatusBaseStreamListener newListener = buildListenerInstance((Class<AbstractStatusBaseStreamListener>) activeListener);
-			if (newListener != null) {
-				this.twitterStream.addListener(newListener);
-			}
-		}
+    @Override
+    protected void startStreaming(final Long lastTweetId)
+        throws TwitterException {
+        twitterStream = new TwitterStreamFactory(conf).getInstance();
+        for (final Class<? extends AbstractStatusBaseStreamListener> activeListener: listeners) {
+            final AbstractStatusBaseStreamListener newListener =
+                buildListenerInstance((Class<AbstractStatusBaseStreamListener>) activeListener);
+            if (newListener != null) {
+                twitterStream.addListener(newListener);
+            }
+        }
 
-		if (mentionedUsers != null || hashTags != null) {
-			FilterQuery fq = new FilterQuery();
-			if (mentionedUsers != null) {
-				Twitter twitter = new TwitterFactory(conf).getInstance();
-				int[] userIds = null;
-				try {
-					userIds = userIds(twitter.lookupUsers(mentionedUsers));
-				} catch (TwitterException e) {
-				}
-				if (userIds != null) {
-					fq.follow(userIds);
-				}
-			}
-			if (hashTags != null) {
-				fq.track(hashTags);
-			}
-			twitterStream.filter(fq);
-		} else {
-			twitterStream.firehose(1000);
-		}
-	}
+        if (mentionedUsers != null || hashTags != null) {
+            final FilterQuery fq = new FilterQuery();
+            if (mentionedUsers != null) {
+                final Twitter twitter = new TwitterFactory(conf).getInstance();
+                int[] userIds = null;
+                try {
+                    userIds = userIds(twitter.lookupUsers(mentionedUsers));
+                } catch (final TwitterException e) {}
+                if (userIds != null) {
+                    fq.follow(userIds);
+                }
+            }
+            if (hashTags != null) {
+                fq.track(hashTags);
+            }
+            twitterStream.filter(fq);
 
-	private int[] userIds(ResponseList<User> users) {
-		if (users == null || users.size() == 0) {
-			return new int[0];
-		}
-		int[] ids = new int[users.size()];
-		for (int i = 0; i < users.size(); i++) {
-			ids[i] = users.get(i).getId();
-		}
-		return ids;
-	}
+            if (lastTweetId != null) {
+                StringBuilder sb = new StringBuilder();
+                if (hashTags != null) {
+                    for (int i = 0; i < hashTags.length; i++) {
+                        if (i > 0) {
+                            sb.append(" OR ");
+                        }
+                        sb.append(hashTags[i]);
+                    }
+                }
+                if (mentionedUsers != null) {
+                    for (int i = 0; i < mentionedUsers.length; i++) {
+                        if (sb.length() > 0) {
+                            sb.append(" OR ");
+                        }
+                        sb.append('@').append(mentionedUsers[i]);
+                    }
+                }
+                Twitter twitter = new TwitterFactory(conf).getInstance();
+
+                loadQuery(sb.toString(), lastTweetId, twitter);
+                loadDirectMessages(lastTweetId, twitter);
+
+                twitter.shutdown();
+            }
+
+        } else {
+            twitterStream.firehose(1000);
+        }
+    }
+
+    private int[] userIds(final ResponseList<User> users) {
+        if (users == null || users.size() == 0) { return new int[0]; }
+        final int[] ids = new int[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+            ids[i] = users.get(i).getId();
+        }
+        return ids;
+    }
 }

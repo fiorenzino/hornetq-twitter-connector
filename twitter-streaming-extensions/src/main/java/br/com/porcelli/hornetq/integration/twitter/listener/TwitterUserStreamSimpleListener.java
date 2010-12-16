@@ -1,7 +1,5 @@
 package br.com.porcelli.hornetq.integration.twitter.listener;
 
-import org.hornetq.core.logging.Logger;
-import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ServerMessage;
 
@@ -9,40 +7,29 @@ import twitter4j.DirectMessage;
 import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.UserStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.impl.MessageSupport;
 
 public class TwitterUserStreamSimpleListener extends
-		AbstractUserBaseStreamListener implements UserStreamListener {
-	private static final Logger log = Logger
-			.getLogger(TwitterUserStreamSimpleListener.class);
+        AbstractUserBaseStreamListener implements UserStreamListener {
 
-	public TwitterUserStreamSimpleListener(PostOffice postOffice,
-			StorageManager storageManager, String queueName) {
-		super(postOffice, storageManager, queueName);
-	}
+    public TwitterUserStreamSimpleListener(final PostOffice postOffice,
+                                           final String queueName,
+                                           final String lastTweetQueueName) {
+        super(postOffice, queueName, lastTweetQueueName);
+    }
 
-	@Override
-	public void onStatus(Status status) {
-		ServerMessage msg = buildMessage(status);
-		try {
-			getPostOffice().route(msg, false);
-		} catch (Exception e) {
-			log.error("Error on TwitterUserStreamSimpleListener.onStatus", e);
-		}
-	}
+    @Override
+    public void onStatus(final Status status) {
+        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), status);
+        MessageSupport.postTweet(getPostOffice(), msg, getLastTweetQueueName(), status.getId());
+    }
 
-	@Override
-	public void onDirectMessage(DirectMessage directMessage) {
-		ServerMessage msg = buildMessage(directMessage);
-		try {
-			getPostOffice().route(msg, false);
-		} catch (Exception e) {
-			log.error(
-					"Error on TwitterUserStreamSimpleListener.onDirectMessage",
-					e);
-		}
-	}
+    @Override
+    public void onDirectMessage(final DirectMessage directMessage) {
+        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), directMessage);
+        MessageSupport.postDirectMessage(getPostOffice(), msg, getLastTweetQueueName(), directMessage.getId());
+    }
 
-	@Override
-	public void onRetweet(User source, User target, Status retweetedStatus) {
-	}
+    @Override
+    public void onRetweet(final User source, final User target, final Status retweetedStatus) {}
 }

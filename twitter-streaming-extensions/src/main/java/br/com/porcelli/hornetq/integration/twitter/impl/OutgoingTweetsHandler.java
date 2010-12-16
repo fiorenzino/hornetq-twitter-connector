@@ -37,183 +37,180 @@ import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 
 /**
- * OutgoingTweetsHandler consumes from configured HornetQ address and forwards
- * to the twitter.
+ * OutgoingTweetsHandler consumes from configured HornetQ address and forwards to the twitter.
  */
 public class OutgoingTweetsHandler implements Consumer, ConnectorService {
-	private static final Logger log = Logger
-			.getLogger(OutgoingTweetsHandler.class);
+    private static final Logger log       = Logger
+                                              .getLogger(OutgoingTweetsHandler.class);
 
-	private final String connectorName;
+    private final String        connectorName;
 
-	private final String consumerKey;
+    private final String        consumerKey;
 
-	private final String consumerSecret;
+    private final String        consumerSecret;
 
-	private final String accessToken;
+    private final String        accessToken;
 
-	private final String accessTokenSecret;
+    private final String        accessTokenSecret;
 
-	private final String queueName;
+    private final String        queueName;
 
-	private final PostOffice postOffice;
+    private final PostOffice    postOffice;
 
-	private Twitter twitter = null;
+    private Twitter             twitter   = null;
 
-	private Queue queue = null;
+    private Queue               queue     = null;
 
-	private Filter filter = null;
+    private Filter              filter    = null;
 
-	private boolean isStarted = false;
+    private boolean             isStarted = false;
 
-	public OutgoingTweetsHandler(final String connectorName,
-			final Map<String, Object> configuration, final PostOffice postOffice) {
-		this.connectorName = connectorName;
-		this.consumerKey = ConfigurationHelper
-				.getStringProperty(InternalTwitterConstants.PROP_CONSUMER_KEY,
-						null, configuration);
-		this.consumerSecret = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.PROP_CONSUMER_SECRET, null,
-				configuration);
-		this.accessToken = ConfigurationHelper
-				.getStringProperty(InternalTwitterConstants.PROP_ACCESS_TOKEN,
-						null, configuration);
-		this.accessTokenSecret = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.PROP_ACCESS_TOKEN_SECRET, null,
-				configuration);
-		this.queueName = ConfigurationHelper.getStringProperty(
-				InternalTwitterConstants.PROP_QUEUE_NAME, null, configuration);
-		this.postOffice = postOffice;
-	}
+    public OutgoingTweetsHandler(final String connectorName,
+                                 final Map<String, Object> configuration, final PostOffice postOffice) {
+        this.connectorName = connectorName;
+        consumerKey = ConfigurationHelper
+                .getStringProperty(InternalTwitterConstants.PROP_CONSUMER_KEY,
+                        null, configuration);
+        consumerSecret = ConfigurationHelper.getStringProperty(
+                InternalTwitterConstants.PROP_CONSUMER_SECRET, null,
+                configuration);
+        accessToken = ConfigurationHelper
+                .getStringProperty(InternalTwitterConstants.PROP_ACCESS_TOKEN,
+                        null, configuration);
+        accessTokenSecret = ConfigurationHelper.getStringProperty(
+                InternalTwitterConstants.PROP_ACCESS_TOKEN_SECRET, null,
+                configuration);
+        queueName = ConfigurationHelper.getStringProperty(
+                InternalTwitterConstants.PROP_QUEUE_NAME, null, configuration);
+        this.postOffice = postOffice;
+    }
 
-	/**
-	 * TODO streaming API support TODO rate limit support
-	 */
-	public synchronized void start() throws Exception {
-		if (this.isStarted) {
-			return;
-		}
+    /**
+     * TODO streaming API support TODO rate limit support
+     */
+    @Override
+    public synchronized void start()
+        throws Exception {
+        if (isStarted) { return; }
 
-		if (this.connectorName == null || this.connectorName.trim().equals("")) {
-			throw new Exception("invalid connector name: " + this.connectorName);
-		}
+        if (connectorName == null || connectorName.trim().equals("")) { throw new Exception("invalid connector name: "
+            + connectorName); }
 
-		if (this.queueName == null || this.queueName.trim().equals("")) {
-			throw new Exception("invalid queue name: " + queueName);
-		}
+        if (queueName == null || queueName.trim().equals("")) { throw new Exception("invalid queue name: " + queueName); }
 
-		SimpleString name = new SimpleString(this.queueName);
-		Binding b = this.postOffice.getBinding(name);
-		if (b == null) {
-			throw new Exception(connectorName + ": queue " + queueName
-					+ " not found");
-		}
-		this.queue = (Queue) b.getBindable();
+        final SimpleString name = new SimpleString(queueName);
+        final Binding b = postOffice.getBinding(name);
+        if (b == null) { throw new Exception(connectorName + ": queue " + queueName
+                    + " not found"); }
+        queue = (Queue) b.getBindable();
 
-		TwitterFactory tf = new TwitterFactory();
-		this.twitter = tf.getOAuthAuthorizedInstance(this.consumerKey,
-				this.consumerSecret, new AccessToken(this.accessToken,
-						this.accessTokenSecret));
-		this.twitter.verifyCredentials();
+        final TwitterFactory tf = new TwitterFactory();
+        twitter = tf.getOAuthAuthorizedInstance(consumerKey,
+                consumerSecret, new AccessToken(accessToken,
+                        accessTokenSecret));
+        twitter.verifyCredentials();
 
-		// TODO make filter-string configurable
-		// this.filter = FilterImpl.createFilter(filterString);
-		this.filter = null;
+        // TODO make filter-string configurable
+        // this.filter = FilterImpl.createFilter(filterString);
+        filter = null;
 
-		this.queue.addConsumer(this);
+        queue.addConsumer(this);
 
-		this.queue.deliverAsync();
-		this.isStarted = true;
-		log.debug(connectorName + ": started");
-	}
+        queue.deliverAsync();
+        isStarted = true;
+        log.debug(connectorName + ": started");
+    }
 
-	public boolean isStarted() {
-		return isStarted; // To change body of implemented methods use File |
-							// Settings | File Templates.
-	}
+    @Override
+    public boolean isStarted() {
+        return isStarted; // To change body of implemented methods use File |
+                          // Settings | File Templates.
+    }
 
-	public synchronized void stop() throws Exception {
-		if (!this.isStarted) {
-			return;
-		}
+    @Override
+    public synchronized void stop()
+        throws Exception {
+        if (!isStarted) { return; }
 
-		log.debug(connectorName + ": receive shutdown request");
+        log.debug(connectorName + ": receive shutdown request");
 
-		this.queue.removeConsumer(this);
+        queue.removeConsumer(this);
 
-		this.isStarted = false;
-		log.debug(connectorName + ": shutdown");
-	}
+        isStarted = false;
+        log.debug(connectorName + ": shutdown");
+    }
 
-	public String getName() {
-		return connectorName;
-	}
+    @Override
+    public String getName() {
+        return connectorName;
+    }
 
-	public Filter getFilter() {
-		return filter;
-	}
+    @Override
+    public Filter getFilter() {
+        return filter;
+    }
 
-	public HandleStatus handle(final MessageReference ref) throws Exception {
-		if (filter != null && !filter.match(ref.getMessage())) {
-			return HandleStatus.NO_MATCH;
-		}
+    @Override
+    public HandleStatus handle(final MessageReference ref)
+        throws Exception {
+        if (filter != null && !filter.match(ref.getMessage())) { return HandleStatus.NO_MATCH; }
 
-		synchronized (this) {
-			ref.handled();
+        synchronized (this) {
+            ref.handled();
 
-			ServerMessage message = ref.getMessage();
+            final ServerMessage message = ref.getMessage();
 
-			StatusUpdate status = new StatusUpdate(message.getBodyBuffer()
-					.readString());
+            final StatusUpdate status = new StatusUpdate(message.getBodyBuffer()
+                    .readString());
 
-			// set optional property
+            // set optional property
 
-			if (message
-					.containsProperty(TwitterConstants.KEY_IN_REPLY_TO_STATUS_ID)) {
-				status.setInReplyToStatusId(message
-						.getLongProperty(TwitterConstants.KEY_IN_REPLY_TO_STATUS_ID));
-			}
+            if (message
+                    .containsProperty(TwitterConstants.KEY_IN_REPLY_TO_STATUS_ID)) {
+                status.setInReplyToStatusId(message
+                        .getLongProperty(TwitterConstants.KEY_IN_REPLY_TO_STATUS_ID));
+            }
 
-			if (message
-					.containsProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE)) {
-				double geolat = message
-						.getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE);
-				double geolong = message
-						.getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LONGITUDE);
-				status.setLocation(new GeoLocation(geolat, geolong));
-			}
+            if (message
+                    .containsProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE)) {
+                final double geolat = message
+                        .getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE);
+                final double geolong = message
+                        .getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LONGITUDE);
+                status.setLocation(new GeoLocation(geolat, geolong));
+            }
 
-			if (message.containsProperty(TwitterConstants.KEY_PLACE_ID)) {
-				status.setPlaceId(message
-						.getStringProperty(TwitterConstants.KEY_PLACE_ID));
-			}
+            if (message.containsProperty(TwitterConstants.KEY_PLACE_ID)) {
+                status.setPlaceId(message
+                        .getStringProperty(TwitterConstants.KEY_PLACE_ID));
+            }
 
-			if (message
-					.containsProperty(TwitterConstants.KEY_DISPLAY_COODINATES)) {
-				status.setDisplayCoordinates(message
-						.getBooleanProperty(TwitterConstants.KEY_DISPLAY_COODINATES));
-			}
+            if (message
+                    .containsProperty(TwitterConstants.KEY_DISPLAY_COODINATES)) {
+                status.setDisplayCoordinates(message
+                        .getBooleanProperty(TwitterConstants.KEY_DISPLAY_COODINATES));
+            }
 
-			// send to Twitter
-			try {
-				this.twitter.updateStatus(status);
-			} catch (TwitterException e) {
-				if (e.getStatusCode() == 403) {
-					// duplicated message
-					log.warn(connectorName
-							+ ": HTTP status code = 403: Ignore duplicated message");
-					queue.acknowledge(ref);
+            // send to Twitter
+            try {
+                twitter.updateStatus(status);
+            } catch (final TwitterException e) {
+                if (e.getStatusCode() == 403) {
+                    // duplicated message
+                    log.warn(connectorName
+                            + ": HTTP status code = 403: Ignore duplicated message");
+                    queue.acknowledge(ref);
 
-					return HandleStatus.HANDLED;
-				} else {
-					throw e;
-				}
-			}
+                    return HandleStatus.HANDLED;
+                } else {
+                    throw e;
+                }
+            }
 
-			queue.acknowledge(ref);
-			log.debug(connectorName + ": forwarded to twitter: "
-					+ message.getMessageID());
-			return HandleStatus.HANDLED;
-		}
-	}
+            queue.acknowledge(ref);
+            log.debug(connectorName + ": forwarded to twitter: "
+                    + message.getMessageID());
+            return HandleStatus.HANDLED;
+        }
+    }
 }

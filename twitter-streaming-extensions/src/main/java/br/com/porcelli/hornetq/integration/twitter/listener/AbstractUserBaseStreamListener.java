@@ -1,6 +1,5 @@
 package br.com.porcelli.hornetq.integration.twitter.listener;
 
-import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 
 import twitter4j.Status;
@@ -9,54 +8,44 @@ import twitter4j.UserList;
 import twitter4j.UserStreamListener;
 
 public abstract class AbstractUserBaseStreamListener extends
-		AbstractBaseStreamListener implements UserStreamListener {
+        AbstractBaseStreamListener implements UserStreamListener {
 
-	public AbstractUserBaseStreamListener(PostOffice postOffice,
-			StorageManager storageManager, String queueName) {
-		super(postOffice, storageManager, queueName);
-	}
+    public AbstractUserBaseStreamListener(final PostOffice postOffice,
+                                          final String queueName,
+                                          final String lastTweetQueueName) {
+        super(postOffice, queueName, lastTweetQueueName);
+    }
 
-	@Override
-	public void onFavorite(User arg0, User arg1, Status arg2) {
-	}
+    @Override
+    public void onFavorite(final User arg0, final User arg1, final Status arg2) {}
 
-	@Override
-	public void onFollow(User arg0, User arg1) {
-	}
+    @Override
+    public void onFollow(final User arg0, final User arg1) {}
 
-	@Override
-	public void onFriendList(int[] arg0) {
-	}
+    @Override
+    public void onFriendList(final int[] arg0) {}
 
-	@Override
-	public void onBlock(User arg0, User arg1) {
-	}
+    @Override
+    public void onBlock(final User arg0, final User arg1) {}
 
-	@Override
-	public void onUnblock(User arg0, User arg1) {
-	}
+    @Override
+    public void onUnblock(final User arg0, final User arg1) {}
 
-	@Override
-	public void onUnfavorite(User arg0, User arg1, Status arg2) {
-	}
+    @Override
+    public void onUnfavorite(final User arg0, final User arg1, final Status arg2) {}
 
-	@Override
-	public void onUnfollow(User arg0, User arg1) {
-	}
+    @Override
+    public void onUnfollow(final User arg0, final User arg1) {}
 
-	@Override
-	public void onUserListCreated(User arg0, UserList arg1) {
-	}
+    @Override
+    public void onUserListCreated(final User arg0, final UserList arg1) {}
 
-	@Override
-	public void onUserListDestroyed(User arg0, UserList arg1) {
-	}
+    @Override
+    public void onUserListDestroyed(final User arg0, final UserList arg1) {}
 
-	@Override
-	public void onUserListSubscribed(User arg0, User arg1, UserList arg2) {
-	}
+    @Override
+    public void onUserListSubscribed(final User arg0, final User arg1, final UserList arg2) {}
 
-	@Override
-	public void onUserListUpdated(User arg0, UserList arg1) {
-	}
+    @Override
+    public void onUserListUpdated(final User arg0, final UserList arg1) {}
 }

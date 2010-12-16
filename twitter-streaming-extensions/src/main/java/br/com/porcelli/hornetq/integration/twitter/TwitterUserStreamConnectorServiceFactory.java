@@ -12,6 +12,10 @@
  */
 package br.com.porcelli.hornetq.integration.twitter;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ConnectorService;
@@ -19,25 +23,24 @@ import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.impl.UserStreamHandler;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-
 public class TwitterUserStreamConnectorServiceFactory implements
-		ConnectorServiceFactory {
-	public ConnectorService createConnectorService(String connectorName,
-			final Map<String, Object> configuration,
-			final StorageManager storageManager, final PostOffice postOffice,
-			final ScheduledExecutorService scheduledThreadPool) {
-		return new UserStreamHandler(connectorName, configuration,
-				storageManager, postOffice);
-	}
+        ConnectorServiceFactory {
+    @Override
+    public ConnectorService createConnectorService(final String connectorName,
+                                                   final Map<String, Object> configuration,
+                                                   final StorageManager storageManager, final PostOffice postOffice,
+                                                   final ScheduledExecutorService scheduledThreadPool) {
+        return new UserStreamHandler(connectorName, configuration,
+                storageManager, postOffice);
+    }
 
-	public Set<String> getAllowableProperties() {
-		return InternalTwitterConstants.ALLOWABLE_USER_STREAM_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getAllowableProperties() {
+        return InternalTwitterConstants.ALLOWABLE_USER_STREAM_CONNECTOR_KEYS;
+    }
 
-	public Set<String> getRequiredProperties() {
-		return InternalTwitterConstants.REQUIRED_USER_STREAM_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getRequiredProperties() {
+        return InternalTwitterConstants.REQUIRED_USER_STREAM_CONNECTOR_KEYS;
+    }
 }

@@ -1,31 +1,24 @@
 package br.com.porcelli.hornetq.integration.twitter.listener;
 
-import org.hornetq.core.logging.Logger;
-import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ServerMessage;
 
 import twitter4j.Status;
 import twitter4j.StatusListener;
+import br.com.porcelli.hornetq.integration.twitter.impl.MessageSupport;
 
 public class TwitterStatusStreamSimpleListener extends
-		AbstractStatusBaseStreamListener implements StatusListener {
-	private static final Logger log = Logger
-			.getLogger(TwitterStatusStreamSimpleListener.class);
+        AbstractStatusBaseStreamListener implements StatusListener {
 
-	public TwitterStatusStreamSimpleListener(PostOffice postOffice,
-			StorageManager storageManager, String queueName) {
-		super(postOffice, storageManager, queueName);
-	}
+    public TwitterStatusStreamSimpleListener(final PostOffice postOffice,
+                                             final String queueName,
+                                             final String lastTweetQueueName) {
+        super(postOffice, queueName, lastTweetQueueName);
+    }
 
-	@Override
-	public void onStatus(Status status) {
-		ServerMessage msg = buildMessage(status);
-		try {
-			getPostOffice().route(msg, false);
-		} catch (Exception e) {
-			log.error("Error on TwitterUserStreamSimpleListener.onStatus", e);
-		}
-	}
-
+    @Override
+    public void onStatus(final Status status) {
+        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), status);
+        MessageSupport.postTweet(getPostOffice(), msg, getLastTweetQueueName(), status.getId());
+    }
 }

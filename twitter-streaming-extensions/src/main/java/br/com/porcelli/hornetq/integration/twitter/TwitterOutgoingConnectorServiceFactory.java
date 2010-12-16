@@ -12,6 +12,10 @@
  */
 package br.com.porcelli.hornetq.integration.twitter;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ConnectorService;
@@ -19,28 +23,28 @@ import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.impl.OutgoingTweetsHandler;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-
 /**
- * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a> Created Jun
- *         29, 2010
+ * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a> Created Jun 29, 2010
  */
 public class TwitterOutgoingConnectorServiceFactory implements
-		ConnectorServiceFactory {
-	public ConnectorService createConnectorService(String connectorName,
-			Map<String, Object> configuration, StorageManager storageManager,
-			PostOffice postOffice, ScheduledExecutorService scheduledThreadPool) {
-		return new OutgoingTweetsHandler(connectorName, configuration,
-				postOffice);
-	}
+        ConnectorServiceFactory {
+    @Override
+    public
+        ConnectorService
+        createConnectorService(final String connectorName,
+                                                   final Map<String, Object> configuration, final StorageManager storageManager,
+                                                   final PostOffice postOffice, final ScheduledExecutorService scheduledThreadPool) {
+        return new OutgoingTweetsHandler(connectorName, configuration,
+                postOffice);
+    }
 
-	public Set<String> getAllowableProperties() {
-		return InternalTwitterConstants.ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getAllowableProperties() {
+        return InternalTwitterConstants.ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
+    }
 
-	public Set<String> getRequiredProperties() {
-		return InternalTwitterConstants.REQUIRED_OUTGOING_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getRequiredProperties() {
+        return InternalTwitterConstants.REQUIRED_OUTGOING_CONNECTOR_KEYS;
+    }
 }

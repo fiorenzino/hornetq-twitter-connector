@@ -24,20 +24,23 @@ import org.hornetq.core.server.ConnectorServiceFactory;
 import br.com.porcelli.hornetq.integration.twitter.impl.StatusStreamHandler;
 
 public class TwitterStatusStreamConnectorServiceFactory implements
-		ConnectorServiceFactory {
-	public ConnectorService createConnectorService(String connectorName,
-			final Map<String, Object> configuration,
-			final StorageManager storageManager, final PostOffice postOffice,
-			final ScheduledExecutorService scheduledThreadPool) {
-		return new StatusStreamHandler(connectorName, configuration,
-				storageManager, postOffice);
-	}
+        ConnectorServiceFactory {
+    @Override
+    public ConnectorService createConnectorService(final String connectorName,
+                                                   final Map<String, Object> configuration,
+                                                   final StorageManager storageManager, final PostOffice postOffice,
+                                                   final ScheduledExecutorService scheduledThreadPool) {
+        return new StatusStreamHandler(connectorName, configuration,
+                storageManager, postOffice);
+    }
 
-	public Set<String> getAllowableProperties() {
-		return InternalTwitterConstants.ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getAllowableProperties() {
+        return InternalTwitterConstants.ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
+    }
 
-	public Set<String> getRequiredProperties() {
-		return InternalTwitterConstants.REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
-	}
+    @Override
+    public Set<String> getRequiredProperties() {
+        return InternalTwitterConstants.REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
+    }
 }
