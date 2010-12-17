@@ -1,12 +1,10 @@
 package br.com.porcelli.hornetq.integration.twitter.impl;
 
-import org.hornetq.api.core.Message;
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ServerMessage;
 import org.hornetq.core.server.impl.ServerMessageImpl;
-import org.hornetq.jms.client.HornetQTextMessage;
 
 import twitter4j.DirectMessage;
 import twitter4j.GeoLocation;
@@ -53,9 +51,8 @@ public final class MessageSupport {
         final ServerMessage msg = new ServerMessageImpl(id, InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));
         msg.setDurable(true);
-        msg.putStringProperty("_HQ_LVQ_NAME", "last.tweet.id");
-        msg.putStringProperty("last.tweet.id", String.valueOf(id));
-
+        msg.getBodyBuffer().writeLong(id);
+        //        msg.putStringProperty("_HQ_LVQ_NAME", "last.tweet.id");
         return msg;
     }
 
@@ -64,7 +61,6 @@ public final class MessageSupport {
             new ServerMessageImpl(status.getId(), InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));
         msg.setDurable(true);
-        msg.encodeMessageIDToBuffer();
 
         msg.putStringProperty(TwitterConstants.KEY_MSG_TYPE, MessageType.TWEET.toString());
 

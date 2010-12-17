@@ -144,10 +144,8 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
                 if (lastTweetQueue.getMessageCount() > 0) {
                     for (Iterator<MessageReference> iterator = lastTweetQueue.iterator(); iterator.hasNext();) {
                         final MessageReference msg = iterator.next();
-                        System.out.println("Message Value: " + msg.getMessage().getStringProperty("last.tweet.id"));
-                        lastTweetId = Long.valueOf(msg.getMessage().getStringProperty("last.tweet.id"));
+                        lastTweetId = msg.getMessage().getBodyBuffer().readLong() + 1L;
                     }
-                    lastTweetQueue.deleteAllReferences();
                 }
             }
         }
@@ -177,17 +175,14 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
         }
     }
 
-    protected void loadQuery(final String query, final long lastTweetId, final Twitter twitter)
+    protected void loadQuery(final String query, final Long lastTweetId, final Twitter twitter)
         throws TwitterException {
-        System.out.println("QUERY: " + query);
-        final Query qry = new Query(query);
-        qry.setSinceId(lastTweetId);
         int page = 1;
-        while (true) {
-            qry.setPage(page);
+        query: while (true) {
+            final Query qry = new Query(query).sinceId(lastTweetId).page(page);
             QueryResult qr = twitter.search(qry);
             if (qr.getTweets().size() == 0) {
-                break;
+                break query;
             }
             for (Tweet activeTweet: qr.getTweets()) {
                 ServerMessage msg = MessageSupport.buildMessage(queueName, activeTweet);
@@ -195,12 +190,10 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             }
             page++;
         }
-        System.out.println("DONE WITH QUERY!");
     }
 
     protected void loadUserTimeline(final long lastTweetId, final Twitter twitter)
         throws TwitterException {
-        System.out.println("USER TIMELINE");
         int page = 1;
         while (true) {
             Paging paging = new Paging(page, lastTweetId);
@@ -214,7 +207,6 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             }
             page++;
         }
-        System.out.println("DONE WITH USER TIMELINE");
     }
 
     public T buildListenerInstance(final Class<T> clazz) {
