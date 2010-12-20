@@ -1,4 +1,4 @@
-package br.com.porcelli.hornetq.integration.twitter.stream.listener;
+package br.com.porcelli.hornetq.integration.twitter.stream.listener.impl;
 
 import org.hornetq.core.server.ServerMessage;
 
@@ -7,7 +7,8 @@ import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.UserStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
-import br.com.porcelli.hornetq.integration.twitter.stream.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public class TwitterUserStreamSimpleListener extends
         AbstractUserBaseStreamListener implements UserStreamListener {

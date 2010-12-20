@@ -22,7 +22,7 @@ import org.hornetq.core.server.ConnectorService;
 import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
-import br.com.porcelli.hornetq.integration.twitter.impl.OutgoingTweetsHandler;
+import br.com.porcelli.hornetq.integration.twitter.outgoing.impl.OutgoingTweetsHandler;
 
 /**
  * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a> Created Jun 29, 2010

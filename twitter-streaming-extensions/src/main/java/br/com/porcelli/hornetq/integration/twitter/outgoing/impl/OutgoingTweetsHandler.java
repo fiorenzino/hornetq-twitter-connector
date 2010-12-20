@@ -10,7 +10,7 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package br.com.porcelli.hornetq.integration.twitter.impl;
+package br.com.porcelli.hornetq.integration.twitter.outgoing.impl;
 
 import java.util.Map;
 

@@ -12,7 +12,7 @@ import twitter4j.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
-import br.com.porcelli.hornetq.integration.twitter.stream.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public abstract class AbstractBaseReclaimLostTweets {
 

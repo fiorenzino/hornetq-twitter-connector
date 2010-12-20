@@ -1,4 +1,4 @@
-package br.com.porcelli.hornetq.integration.twitter.stream;
+package br.com.porcelli.hornetq.integration.twitter.support;
 
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
