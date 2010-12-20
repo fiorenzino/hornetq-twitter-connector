@@ -1,9 +1,11 @@
-package br.com.porcelli.hornetq.integration.twitter.impl;
+package br.com.porcelli.hornetq.integration.twitter.stream;
 
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
+import org.hornetq.core.postoffice.Binding;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ServerMessage;
+import org.hornetq.core.server.impl.LastValueQueue;
 import org.hornetq.core.server.impl.ServerMessageImpl;
 
 import twitter4j.DirectMessage;
@@ -11,9 +13,9 @@ import twitter4j.GeoLocation;
 import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.Tweet;
-import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants.MessageType;
+import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
 
 public final class MessageSupport {
     private static final Logger log = Logger
@@ -26,7 +28,7 @@ public final class MessageSupport {
         try {
             postOffice.route(msg, false);
             if (lastTweetQueueName != null) {
-                ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
+                final ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
                 postOffice.route(lastMsg, false);
             }
         } catch (final Exception e) {
@@ -39,8 +41,14 @@ public final class MessageSupport {
         try {
             postOffice.route(msg, false);
             if (lastTweetQueueName != null) {
-                ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
-                postOffice.route(lastMsg, false);
+                final ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
+                final Binding bind = postOffice.getBinding(new SimpleString(lastTweetQueueName));
+                if (bind instanceof LastValueQueue) {
+                    System.out.println("AHAHAHA! :D");
+                    ((LastValueQueue) bind).add(lastMsg.createReference((LastValueQueue) bind), true, false);
+                } else {
+                    postOffice.route(lastMsg, false);
+                }
             }
         } catch (final Exception e) {
             log.error("Error on MessageSupporter.postDirectMessage", e);
@@ -52,7 +60,7 @@ public final class MessageSupport {
         msg.setAddress(new SimpleString(queueName));
         msg.setDurable(true);
         msg.getBodyBuffer().writeLong(id);
-        //        msg.putStringProperty("_HQ_LVQ_NAME", "last.tweet.id");
+        msg.putStringProperty("_HQ_LVQ_NAME", "last.tweet.id");
         return msg;
     }
 
@@ -129,7 +137,7 @@ public final class MessageSupport {
         return msg;
     }
 
-    public static ServerMessage buildMessage(String queueName, Tweet status) {
+    public static ServerMessage buildMessage(final String queueName, final Tweet status) {
         final ServerMessage msg =
             new ServerMessageImpl(status.getId(), InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));

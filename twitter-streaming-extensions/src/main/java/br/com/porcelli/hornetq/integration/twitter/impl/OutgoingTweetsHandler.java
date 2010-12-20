@@ -33,8 +33,8 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.http.AccessToken;
-import br.com.porcelli.hornetq.integration.twitter.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
+import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
 
 /**
  * OutgoingTweetsHandler consumes from configured HornetQ address and forwards to the twitter.

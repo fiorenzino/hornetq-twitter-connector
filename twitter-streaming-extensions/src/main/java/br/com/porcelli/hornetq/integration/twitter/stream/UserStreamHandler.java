@@ -1,15 +1,13 @@
-package br.com.porcelli.hornetq.integration.twitter.impl;
+package br.com.porcelli.hornetq.integration.twitter.stream;
 
 import java.util.Map;
 
 import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 
-import twitter4j.Twitter;
 import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
 import twitter4j.TwitterStreamFactory;
-import br.com.porcelli.hornetq.integration.twitter.listener.AbstractUserBaseStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
 
 public class UserStreamHandler extends
         BaseStreamHandler<AbstractUserBaseStreamListener> {
@@ -21,10 +19,10 @@ public class UserStreamHandler extends
     }
 
     @Override
-    protected void startStreaming(Long lastTweetId)
+    protected void startStreaming()
         throws TwitterException {
-        twitterStream = new TwitterStreamFactory(conf).getInstance();
-        for (final Class<? extends AbstractUserBaseStreamListener> activeListener: listeners) {
+        twitterStream = new TwitterStreamFactory(commonData.getConf()).getInstance();
+        for (final Class<? extends AbstractUserBaseStreamListener> activeListener: listenersSet) {
             final AbstractUserBaseStreamListener newListener =
                 buildListenerInstance((Class<AbstractUserBaseStreamListener>) activeListener);
             if (newListener != null) {
@@ -33,15 +31,6 @@ public class UserStreamHandler extends
         }
 
         twitterStream.user();
-
-        if (lastTweetId != null) {
-            Twitter twitter = new TwitterFactory(conf).getInstance();
-
-            loadUserTimeline(lastTweetId, twitter);
-            loadDirectMessages(lastTweetId, twitter);
-
-            twitter.shutdown();
-        }
     }
 
 }

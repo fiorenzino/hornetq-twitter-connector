@@ -11,12 +11,14 @@
  * permissions and limitations under the License.
  */
 
-package br.com.porcelli.hornetq.integration.twitter;
+package br.com.porcelli.hornetq.integration.twitter.data;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hornetq.api.core.SimpleString;
+
+import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 
 /**
  * A TwitterConstants
@@ -40,6 +42,9 @@ public class InternalTwitterConstants implements TwitterConstants {
     public static final Set<String>  ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS;
     public static final Set<String>  REQUIRED_STATUS_STREAM_CONNECTOR_KEYS;
 
+    public static final Set<String>  ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS;
+    public static final Set<String>  REQUIRED_SITE_STREAM_CONNECTOR_KEYS;
+
     public static final Set<String>  ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
     public static final Set<String>  REQUIRED_OUTGOING_CONNECTOR_KEYS;
 
@@ -48,11 +53,13 @@ public class InternalTwitterConstants implements TwitterConstants {
     public static final String       PROP_ACCESS_TOKEN             = "accessToken";
     public static final String       PROP_ACCESS_TOKEN_SECRET      = "accessTokenSecret";
     public static final String       PROP_QUEUE_NAME               = "queue";
+    public static final String       PROP_SCREEN_NAME              = "screenName";
 
     public static final String       PROP_LAST_TWEET_QUEUE_NAME    = "lastTweetQueue";
 
     // STREAM
     public static final String       PROP_STREAM_LISTENERS         = "streamListeners";
+    public static final String       PROP_LOST_TWEET_RECLAIMERS    = "lostTweetReclaimers";
 
     // FILTER
     public static final String       PROP_MENTIONED_USERS          = "mentionedUsers";
@@ -66,6 +73,8 @@ public class InternalTwitterConstants implements TwitterConstants {
         ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
         ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
         ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_STREAM_LISTENERS);
+        ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_LOST_TWEET_RECLAIMERS);
+        ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_SCREEN_NAME);
         ALLOWABLE_USER_STREAM_CONNECTOR_KEYS.add(PROP_LAST_TWEET_QUEUE_NAME);
 
         REQUIRED_USER_STREAM_CONNECTOR_KEYS = new HashSet<String>();
@@ -82,7 +91,7 @@ public class InternalTwitterConstants implements TwitterConstants {
         ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
         ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
         ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_STREAM_LISTENERS);
-        ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_MENTIONED_USERS);
+        ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_SCREEN_NAME);
         ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_HASHTAGS);
         ALLOWABLE_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_LAST_TWEET_QUEUE_NAME);
 
@@ -92,6 +101,24 @@ public class InternalTwitterConstants implements TwitterConstants {
         REQUIRED_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN);
         REQUIRED_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
         REQUIRED_STATUS_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
+
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS = new HashSet<String>();
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_CONSUMER_KEY);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_CONSUMER_SECRET);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_SCREEN_NAME);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_STREAM_LISTENERS);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_MENTIONED_USERS);
+        ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS.add(PROP_LAST_TWEET_QUEUE_NAME);
+
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS = new HashSet<String>();
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS.add(PROP_CONSUMER_KEY);
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS.add(PROP_CONSUMER_SECRET);
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN);
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
+        REQUIRED_SITE_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
 
         ALLOWABLE_OUTGOING_CONNECTOR_KEYS = new HashSet<String>();
         ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_CONSUMER_KEY);

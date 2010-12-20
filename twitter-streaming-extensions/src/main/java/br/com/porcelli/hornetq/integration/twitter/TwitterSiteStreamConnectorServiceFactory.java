@@ -22,28 +22,24 @@ import org.hornetq.core.server.ConnectorService;
 import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
-import br.com.porcelli.hornetq.integration.twitter.impl.OutgoingTweetsHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.SiteStreamHandler;
 
-/**
- * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a> Created Jun 29, 2010
- */
-public class TwitterOutgoingConnectorServiceFactory implements
+public class TwitterSiteStreamConnectorServiceFactory implements
         ConnectorServiceFactory {
     @Override
-    public ConnectorService
-        createConnectorService(final String connectorName, final Map<String, Object> configuration,
-                               final StorageManager storageManager, final PostOffice postOffice,
-                               final ScheduledExecutorService scheduledThreadPool) {
-        return new OutgoingTweetsHandler(connectorName, configuration, postOffice);
+    public ConnectorService createConnectorService(final String connectorName, final Map<String, Object> configuration,
+                                                   final StorageManager storageManager, final PostOffice postOffice,
+                                                   final ScheduledExecutorService scheduledThreadPool) {
+        return new SiteStreamHandler(connectorName, configuration, storageManager, postOffice);
     }
 
     @Override
     public Set<String> getAllowableProperties() {
-        return InternalTwitterConstants.ALLOWABLE_OUTGOING_CONNECTOR_KEYS;
+        return InternalTwitterConstants.ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS;
     }
 
     @Override
     public Set<String> getRequiredProperties() {
-        return InternalTwitterConstants.REQUIRED_OUTGOING_CONNECTOR_KEYS;
+        return InternalTwitterConstants.REQUIRED_SITE_STREAM_CONNECTOR_KEYS;
     }
 }

@@ -1,19 +1,16 @@
-package br.com.porcelli.hornetq.integration.twitter.listener;
-
-import org.hornetq.core.postoffice.PostOffice;
+package br.com.porcelli.hornetq.integration.twitter.stream.listener;
 
 import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.UserStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
 
 public abstract class AbstractUserBaseStreamListener extends
         AbstractBaseStreamListener implements UserStreamListener {
 
-    public AbstractUserBaseStreamListener(final PostOffice postOffice,
-                                          final String queueName,
-                                          final String lastTweetQueueName) {
-        super(postOffice, queueName, lastTweetQueueName);
+    public AbstractUserBaseStreamListener(final TwitterStreamDataModel dataModel) {
+        super(dataModel);
     }
 
     @Override
