@@ -1,7 +1,7 @@
 About
 =====
 
-This is a Twitter Connector Service for {HornetQ}[http://jboss.org/hornetq]. It allows you interact with twitter using HornetQ, wich gives you flexibility and scalability out of the box.
+This is a Twitter Connector Service for [HornetQ](http://jboss.org/hornetq). It allows you interact with twitter using HornetQ, wich gives you flexibility and scalability out of the box.
 
 There is two types of Twitter connector, outgoing and stream. Outgoing connector consumes from a configurable address and forwards to twitter. Stream connector consumes from twitter and forwards to a configurable address.
 
@@ -61,17 +61,17 @@ All you need is run `mvn clean package` and than copy the generated files to ...
 Issue Tracking
 =====
 
-https://github.com/porcelli/hornetq-twitter-streaming/issues
+<https://github.com/porcelli/hornetq-twitter-streaming/issues>
 
 Supported Version:
 =====
 
-* {HornetQ 2.1.2 Final}[http://jboss.org/hornetq]
+* [HornetQ 2.1.2 Final](http://jboss.org/hornetq)
 
 External Dependencies:
 -----
 
-* {Twitter4J version 2.1.8}[http://twitter4j.org]
+* [Twitter4J version 2.1.8](http://twitter4j.org)
 
 
 License
@@ -79,7 +79,7 @@ License
 
 (The Apache License, Version 2.0)
 
-Copyright (c) 2010 Alexandre Porcelli <alexandre.porcelli@gmail.com>
+Copyright (c) 2010 Alexandre Porcelli [alexandre.porcelli@gmail.com]
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:
 
