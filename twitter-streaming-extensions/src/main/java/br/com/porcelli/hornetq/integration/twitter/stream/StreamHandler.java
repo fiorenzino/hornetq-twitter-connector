@@ -41,7 +41,7 @@ public final class StreamHandler implements ConnectorService {
 
     private final String                                       connectorName;
 
-    private TwitterStreamDataModel                             commonData;
+    private final TwitterStreamDataModel                       commonData;
 
     private boolean                                            isStarted = false;
 
@@ -94,9 +94,8 @@ public final class StreamHandler implements ConnectorService {
                 configuration);
 
         Long lastTweetId = null;
-        if (commonData.getLastTweetQueueName() != null) {
-            final Binding lastTweetBinding =
-                commonData.getPostOffice().getBinding(new SimpleString(commonData.getLastTweetQueueName()));
+        if (lastTweetQueueName != null) {
+            final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastTweetQueueName));
             if (lastTweetBinding != null) {
                 final Queue lastTweetQueue = (Queue) lastTweetBinding.getBindable();
                 if (lastTweetQueue.getMessageCount() > 0) {
@@ -121,9 +120,9 @@ public final class StreamHandler implements ConnectorService {
         Twitter twitter = null;
         if (mentionedUsers != null) {
             try {
-                twitter = new TwitterFactory(commonData.getConf()).getInstance();
+                twitter = new TwitterFactory(conf).getInstance();
                 userId = twitter.getId();
-                userIds = userIds(twitter.lookupUsers(commonData.getMentionedUsers()));
+                userIds = userIds(twitter.lookupUsers(mentionedUsers));
             } catch (final TwitterException e) {
                 e.printStackTrace();
             } finally {
@@ -133,8 +132,13 @@ public final class StreamHandler implements ConnectorService {
             }
         }
 
+        this.commonData =
+            new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastTweetId, mentionedUsers,
+                userIds, hashTags, conf, postOffice);
+
         final String listenerList =
             ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_STREAM_LISTENERS, null, configuration);
+
         String[] listeners = splitProperty(listenerList);
         if (listeners != null) {
             UserStreamHandler userHandler = buildUserStreamHandler(listeners);
@@ -157,10 +161,6 @@ public final class StreamHandler implements ConnectorService {
         } else {
             this.streamHandlers = null;
         }
-
-        this.commonData =
-            new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastTweetId, mentionedUsers,
-                userIds, hashTags, conf, postOffice);
     }
 
     private <U extends AbstractUserBaseStreamListener> UserStreamHandler buildUserStreamHandler(String[] listeners) {

@@ -4,6 +4,8 @@ import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
 import org.hornetq.core.postoffice.Binding;
 import org.hornetq.core.postoffice.PostOffice;
+import org.hornetq.core.postoffice.QueueBinding;
+import org.hornetq.core.server.Queue;
 import org.hornetq.core.server.ServerMessage;
 import org.hornetq.core.server.impl.LastValueQueue;
 import org.hornetq.core.server.impl.ServerMessageImpl;
@@ -29,7 +31,18 @@ public final class MessageSupport {
             postOffice.route(msg, false);
             if (lastTweetQueueName != null) {
                 final ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
-                postOffice.route(lastMsg, false);
+                final Binding bind = postOffice.getBinding(new SimpleString(lastTweetQueueName));
+                if (bind instanceof QueueBinding) {
+                    System.out.println("AHAHAHA111! :D");
+                    Queue queue = ((QueueBinding) bind).getQueue();
+                    if (queue instanceof LastValueQueue) {
+                        ((LastValueQueue) queue).addLast(lastMsg.createReference((LastValueQueue) queue));
+                    } else {
+                        postOffice.route(lastMsg, false);
+                    }
+                } else {
+                    postOffice.route(lastMsg, false);
+                }
             }
         } catch (final Exception e) {
             log.error("Error on MessageSupporter.postTweet", e);
@@ -45,7 +58,7 @@ public final class MessageSupport {
                 final Binding bind = postOffice.getBinding(new SimpleString(lastTweetQueueName));
                 if (bind instanceof LastValueQueue) {
                     System.out.println("AHAHAHA! :D");
-                    ((LastValueQueue) bind).add(lastMsg.createReference((LastValueQueue) bind), true, false);
+                    ((LastValueQueue) bind).add(lastMsg.createReference((LastValueQueue) bind), false, true);
                 } else {
                     postOffice.route(lastMsg, false);
                 }
