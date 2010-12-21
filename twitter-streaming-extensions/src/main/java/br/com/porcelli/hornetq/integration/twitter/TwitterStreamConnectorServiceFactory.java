@@ -22,24 +22,24 @@ import org.hornetq.core.server.ConnectorService;
 import org.hornetq.core.server.ConnectorServiceFactory;
 
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
-import br.com.porcelli.hornetq.integration.twitter.stream.SiteStreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.StreamHandler;
 
-public class TwitterSiteStreamConnectorServiceFactory implements
+public class TwitterStreamConnectorServiceFactory implements
         ConnectorServiceFactory {
     @Override
     public ConnectorService createConnectorService(final String connectorName, final Map<String, Object> configuration,
                                                    final StorageManager storageManager, final PostOffice postOffice,
                                                    final ScheduledExecutorService scheduledThreadPool) {
-        return new SiteStreamHandler(connectorName, configuration, storageManager, postOffice);
+        return new StreamHandler(connectorName, configuration, storageManager, postOffice);
     }
 
     @Override
     public Set<String> getAllowableProperties() {
-        return InternalTwitterConstants.ALLOWABLE_SITE_STREAM_CONNECTOR_KEYS;
+        return InternalTwitterConstants.ALLOWABLE_STREAM_CONNECTOR_KEYS;
     }
 
     @Override
     public Set<String> getRequiredProperties() {
-        return InternalTwitterConstants.REQUIRED_SITE_STREAM_CONNECTOR_KEYS;
+        return InternalTwitterConstants.REQUIRED_STREAM_CONNECTOR_KEYS;
     }
 }

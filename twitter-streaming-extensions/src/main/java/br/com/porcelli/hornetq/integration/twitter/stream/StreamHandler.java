@@ -21,43 +21,39 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
 import twitter4j.User;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.stream.impl.BaseStreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.impl.SiteStreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.impl.StatusStreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.impl.UserStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractBaseStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
+import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.AbstractBaseReclaimLostTweets;
 
-public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
-        implements ConnectorService {
-    private static final Logger                                  log       = Logger.getLogger(BaseStreamHandler.class);
+public final class StreamHandler implements ConnectorService {
+    private static final Logger                                log       = Logger.getLogger(StreamHandler.class);
 
-    protected final String                                       connectorName;
+    private final String                                       connectorName;
 
-    protected TwitterStreamDataModel                             commonData;
+    private TwitterStreamDataModel                             commonData;
 
-    protected final Set<Class<T>>                                listenersSet;
+    private boolean                                            isStarted = false;
 
-    protected TwitterStream                                      twitterStream;
+    private final Set<BaseStreamHandler>                       streamHandlers;
 
-    protected boolean                                            isStarted = false;
+    private final Set<? extends AbstractBaseReclaimLostTweets> reclaimersSet;
 
-    protected final Set<? extends AbstractBaseReclaimLostTweets> reclaimersSet;
+    public StreamHandler(final String connectorName, final Map<String, Object> configuration,
+                         final StorageManager storageManager, final PostOffice postOffice) {
 
-    public BaseStreamHandler(final String connectorName,
-                             final Map<String, Object> configuration,
-                             final StorageManager storageManager, final PostOffice postOffice) {
         this.connectorName = connectorName;
-
-        final String listeners = ConfigurationHelper.getStringProperty(
-            InternalTwitterConstants.PROP_STREAM_LISTENERS, null,
-            configuration);
-        if (listeners == null || listeners.trim().length() == 0) {
-            this.listenersSet = null;
-        } else {
-            this.listenersSet = getListeners(listeners);
-        }
 
         final String reclaimers = ConfigurationHelper.getStringProperty(
             InternalTwitterConstants.PROP_STREAM_LISTENERS, null,
@@ -65,7 +61,7 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
         if (reclaimers == null || reclaimers.trim().length() == 0) {
             this.reclaimersSet = null;
         } else {
-            this.reclaimersSet = getReclaimers(reclaimers);
+            this.reclaimersSet = buildReclaimers(reclaimers);
         }
 
         final Configuration conf = new ConfigurationBuilder()
@@ -138,19 +134,109 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             }
         }
 
+        final String listenerList =
+            ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_STREAM_LISTENERS, null, configuration);
+        String[] listeners = splitProperty(listenerList);
+        if (listeners != null) {
+            UserStreamHandler userHandler = buildUserStreamHandler(listeners);
+            SiteStreamHandler siteHandler = buildSiteStreamHandler(listeners);
+            StatusStreamHandler statusHandler = buildStatusStreamHandler(listeners);
+            if (userHandler != null || siteHandler != null || statusHandler != null) {
+                this.streamHandlers = new HashSet<BaseStreamHandler>();
+                if (userHandler != null) {
+                    this.streamHandlers.add(userHandler);
+                }
+                if (siteHandler != null) {
+                    this.streamHandlers.add(siteHandler);
+                }
+                if (statusHandler != null) {
+                    this.streamHandlers.add(statusHandler);
+                }
+            } else {
+                this.streamHandlers = null;
+            }
+        } else {
+            this.streamHandlers = null;
+        }
+
         this.commonData =
             new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastTweetId, mentionedUsers,
                 userIds, hashTags, conf, postOffice);
     }
 
-    private <R extends AbstractBaseReclaimLostTweets> Set<R> getReclaimers(final String reclaimers) {
+    private <U extends AbstractUserBaseStreamListener> UserStreamHandler buildUserStreamHandler(String[] listeners) {
+        Set<U> result = new HashSet<U>();
+        for (String listener: listeners) {
+            try {
+                final Class<?> clazz = Class.forName(listener);
+                if (AbstractUserBaseStreamListener.class.isAssignableFrom(clazz)) {
+                    result.add(buildInstance((Class<U>) clazz));
+                }
+            } catch (final ClassNotFoundException e) {
+                log.error("Twitter Stream '" + listener + "' not found");
+            }
+        }
+        if (result.size() > 0) {
+            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
+            for (U activeUserListener: result) {
+                twitterStream.addListener(activeUserListener);
+            }
+            return new UserStreamHandler(this.commonData, twitterStream);
+        }
+        return null;
+    }
 
+    private <S extends AbstractSiteBaseStreamListener> SiteStreamHandler buildSiteStreamHandler(String[] listeners) {
+        Set<S> result = new HashSet<S>();
+        for (String listener: listeners) {
+            try {
+                final Class<?> clazz = Class.forName(listener);
+                if (AbstractSiteBaseStreamListener.class.isAssignableFrom(clazz)) {
+                    result.add(buildInstance((Class<S>) clazz));
+                }
+            } catch (final ClassNotFoundException e) {
+                log.error("Twitter Stream '" + listener + "' not found");
+            }
+        }
+        if (result.size() > 0) {
+            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
+            for (S activeUserListener: result) {
+                twitterStream.addListener(activeUserListener);
+            }
+            return new SiteStreamHandler(this.commonData, twitterStream);
+        }
+        return null;
+    }
+
+    private <ST extends AbstractStatusBaseStreamListener> StatusStreamHandler buildStatusStreamHandler(String[] listeners) {
+        Set<ST> result = new HashSet<ST>();
+        for (String listener: listeners) {
+            try {
+                final Class<?> clazz = Class.forName(listener);
+                if (AbstractStatusBaseStreamListener.class.isAssignableFrom(clazz)) {
+                    result.add(buildInstance((Class<ST>) clazz));
+                }
+            } catch (final ClassNotFoundException e) {
+                log.error("Twitter Stream '" + listener + "' not found");
+            }
+        }
+        if (result.size() > 0) {
+            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
+            for (ST activeUserListener: result) {
+                twitterStream.addListener(activeUserListener);
+            }
+            return new StatusStreamHandler(this.commonData, twitterStream);
+        }
+        return null;
+    }
+
+    private <R extends AbstractBaseReclaimLostTweets> Set<R> buildReclaimers(final String reclaimers) {
         final Set<R> result = new HashSet<R>();
         for (final String activeReclaimer: splitProperty(reclaimers)) {
             try {
                 final Class<R> clazz = (Class<R>) Class.forName(activeReclaimer);
                 if (AbstractBaseReclaimLostTweets.class.isAssignableFrom(clazz)) {
-                    result.add(buildReclaiberInstance(clazz));
+                    result.add(buildInstance(clazz));
                 }
             } catch (final ClassNotFoundException e) {
                 log.error("Twitter Reclaimer '" + activeReclaimer + "' not found");
@@ -160,11 +246,11 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
         return null;
     }
 
-    public <R extends AbstractBaseReclaimLostTweets> R buildReclaiberInstance(final Class<R> clazz) {
-        R reclaimer = null;
+    private <T> T buildInstance(final Class<T> clazz) {
+        T reclaimer = null;
         final Class<?>[] constructorArgs = new Class<?>[] {TwitterStreamDataModel.class};
         final Object[] args = new Object[] {this.commonData};
-        Constructor<R> constructor;
+        Constructor<T> constructor;
 
         try {
             constructor = clazz.getConstructor(constructorArgs);
@@ -173,23 +259,6 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
             log.error("Reclaimer '");
         }
         return reclaimer;
-    }
-
-    protected Set<Class<T>> getListeners(final String listners) {
-        final Set<Class<T>> result = new HashSet<Class<T>>();
-
-        for (final String activeListner: splitProperty(listners)) {
-            try {
-                final Class<?> clazz = Class.forName(activeListner);
-                if (AbstractBaseStreamListener.class.isAssignableFrom(clazz)) {
-                    result.add((Class<T>) clazz);
-                }
-            } catch (final ClassNotFoundException e) {
-                log.error("Twitter Listener '" + activeListner + "' not found");
-            }
-        }
-        if (result.size() > 0) { return result; }
-        return null;
     }
 
     private int[] userIds(final ResponseList<User> users) {
@@ -203,7 +272,6 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
 
     protected String[] splitProperty(final String propertyValue) {
         if (propertyValue == null || propertyValue.trim().length() == 0) { return null; }
-
         return propertyValue.replace(',', ';').replace(':', ';').split(";");
     }
 
@@ -218,7 +286,7 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
         final Binding b = commonData.getPostOffice().getBinding(new SimpleString(commonData.getQueueName()));
         if (b == null) { throw new Exception(connectorName + ": queue " + commonData.getQueueName()
                     + " not found"); }
-        if (this.listenersSet == null) {
+        if (this.streamHandlers == null || streamHandlers.size() < 1) {
             log.error("There is no Listners, can't start the service.");
             return;
         }
@@ -237,29 +305,24 @@ public abstract class BaseStreamHandler<T extends AbstractBaseStreamListener>
         isStarted = true;
     }
 
-    protected abstract void startStreaming()
-        throws TwitterException;
-
-    public T buildListenerInstance(final Class<T> clazz) {
-        T listener = null;
-        final Class<?>[] constructorArgs = new Class[] {TwitterStreamDataModel.class};
-        final Object[] args = new Object[] {this.commonData};
-        Constructor<T> constructor;
-
-        try {
-            constructor = clazz.getConstructor(constructorArgs);
-            listener = constructor.newInstance(args);
-        } catch (final Exception e) {
-            log.error("Listener '");
+    protected void startStreaming()
+        throws TwitterException {
+        if (streamHandlers != null && streamHandlers.size() > 0) {
+            for (BaseStreamHandler activeHandler: streamHandlers) {
+                activeHandler.start();
+            }
         }
-        return listener;
     }
 
     @Override
     public void stop()
         throws Exception {
         if (!isStarted) { return; }
-        this.twitterStream.shutdown();
+        if (streamHandlers != null && streamHandlers.size() > 0) {
+            for (BaseStreamHandler activeHandler: streamHandlers) {
+                activeHandler.stop();
+            }
+        }
         isStarted = false;
     }
 
