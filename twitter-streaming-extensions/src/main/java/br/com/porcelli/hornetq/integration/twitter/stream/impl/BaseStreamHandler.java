@@ -2,17 +2,17 @@ package br.com.porcelli.hornetq.integration.twitter.stream.impl;
 
 import twitter4j.TwitterException;
 import twitter4j.TwitterStream;
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
 
 public abstract class BaseStreamHandler {
 
-    protected final TwitterStream          twitterStream;
-    protected final TwitterStreamDataModel commonData;
-    private boolean                        isStarted = false;
+    protected final TwitterStream    twitterStream;
+    protected final TwitterStreamDTO data;
+    private boolean                  isStarted = false;
 
-    public BaseStreamHandler(final TwitterStreamDataModel commonData, final TwitterStream twitterStream) {
+    public BaseStreamHandler(final TwitterStreamDTO data, final TwitterStream twitterStream) {
         this.twitterStream = twitterStream;
-        this.commonData = commonData;
+        this.data = data;
     }
 
     public void start()

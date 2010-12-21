@@ -4,14 +4,14 @@ import twitter4j.SiteStreamsListener;
 import twitter4j.Status;
 import twitter4j.User;
 import twitter4j.UserList;
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
-import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 
 public abstract class AbstractSiteBaseStreamListener extends
         AbstractBaseStreamListener implements SiteStreamsListener {
 
-    public AbstractSiteBaseStreamListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
-        super(dataModel, message);
+    public AbstractSiteBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message) {
+        super(data, message);
     }
 
     @Override

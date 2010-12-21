@@ -3,35 +3,35 @@ package br.com.porcelli.hornetq.integration.twitter.stream.listener;
 import org.hornetq.core.logging.Logger;
 import org.hornetq.core.postoffice.PostOffice;
 
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
-import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 
 public abstract class AbstractBaseStreamListener {
-    private static final Logger          log = Logger
+    private static final Logger    log = Logger
                                                  .getLogger(AbstractBaseStreamListener.class);
 
-    private final TwitterStreamDataModel dataModel;
-    protected final MessageSupport       message;
+    private final TwitterStreamDTO data;
+    protected final MessageQueuing message;
 
-    public AbstractBaseStreamListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
-        this.dataModel = dataModel;
+    public AbstractBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message) {
+        this.data = data;
         this.message = message;
     }
 
     public PostOffice getPostOffice() {
-        return dataModel.getPostOffice();
+        return data.getPostOffice();
     }
 
     public String getQueueName() {
-        return dataModel.getQueueName();
+        return data.getQueueName();
     }
 
     public String getLastTweetQueueName() {
-        return dataModel.getLastTweetQueueName();
+        return data.getLastTweetQueueName();
     }
 
     public int[] getUserIds() {
-        return dataModel.getUserIds();
+        return data.getUserIds();
     }
 
     public void onException(final Exception ex) {

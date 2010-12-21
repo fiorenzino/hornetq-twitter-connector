@@ -25,7 +25,7 @@ import twitter4j.User;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.BaseStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.SiteStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.StatusStreamHandler;
@@ -33,7 +33,6 @@ import br.com.porcelli.hornetq.integration.twitter.stream.impl.UserStreamHandler
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
-import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 import br.com.porcelli.hornetq.integration.twitter.support.ReflectionSupport;
 
 public final class StreamHandler implements ConnectorService {
@@ -41,14 +40,14 @@ public final class StreamHandler implements ConnectorService {
 
     private final String                 connectorName;
 
-    private final TwitterStreamDataModel commonData;
+    private final TwitterStreamDTO       data;
 
-    private final MessageSupport         message;
+    private final MessageQueuing         message;
 
     private final Set<BaseStreamHandler> streamHandlers;
 
-    private final Class<?>[]             streamListenersConstructorArgs = new Class<?>[] {TwitterStreamDataModel.class,
-                                                                        MessageSupport.class};
+    private final Class<?>[]             streamListenersConstructorArgs = new Class<?>[] {TwitterStreamDTO.class,
+                                                                        MessageQueuing.class};
     private final Object[]               streamListenersInsanceArgs;
 
     private boolean                      isStarted                      = false;
@@ -145,48 +144,48 @@ public final class StreamHandler implements ConnectorService {
             }
         }
 
-        this.commonData =
-            new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastDMQueueName, lastTweetId,
+        data =
+            new TwitterStreamDTO(queueName, userScreenName, userId, lastTweetQueueName, lastDMQueueName, lastTweetId,
                 lastDMId, mentionedUsers, userIds, hashTags, conf, postOffice);
 
         final String reclaimers = ConfigurationHelper.getStringProperty(
             InternalTwitterConstants.PROP_LOST_TWEET_RECLAIMERS, null,
             configuration);
 
-        this.message = new MessageSupport(this.commonData, splitProperty(reclaimers));
+        message = new MessageQueuing(data, splitProperty(reclaimers));
 
-        this.streamListenersInsanceArgs = new Object[] {this.commonData, this.message};
+        streamListenersInsanceArgs = new Object[] {data, message};
 
         final String listenerList =
             ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_STREAM_LISTENERS, null, configuration);
 
-        String[] listeners = splitProperty(listenerList);
+        final String[] listeners = splitProperty(listenerList);
         if (listeners != null) {
-            UserStreamHandler userHandler = buildUserStreamHandler(listeners);
-            SiteStreamHandler siteHandler = buildSiteStreamHandler(listeners);
-            StatusStreamHandler statusHandler = buildStatusStreamHandler(listeners);
+            final UserStreamHandler userHandler = buildUserStreamHandler(listeners);
+            final SiteStreamHandler siteHandler = buildSiteStreamHandler(listeners);
+            final StatusStreamHandler statusHandler = buildStatusStreamHandler(listeners);
             if (userHandler != null || siteHandler != null || statusHandler != null) {
-                this.streamHandlers = new HashSet<BaseStreamHandler>();
+                streamHandlers = new HashSet<BaseStreamHandler>();
                 if (userHandler != null) {
-                    this.streamHandlers.add(userHandler);
+                    streamHandlers.add(userHandler);
                 }
                 if (siteHandler != null) {
-                    this.streamHandlers.add(siteHandler);
+                    streamHandlers.add(siteHandler);
                 }
                 if (statusHandler != null) {
-                    this.streamHandlers.add(statusHandler);
+                    streamHandlers.add(statusHandler);
                 }
             } else {
-                this.streamHandlers = null;
+                streamHandlers = null;
             }
         } else {
-            this.streamHandlers = null;
+            streamHandlers = null;
         }
     }
 
-    private <U extends AbstractUserBaseStreamListener> UserStreamHandler buildUserStreamHandler(String[] listeners) {
-        Set<U> result = new HashSet<U>();
-        for (String listener: listeners) {
+    private <U extends AbstractUserBaseStreamListener> UserStreamHandler buildUserStreamHandler(final String[] listeners) {
+        final Set<U> result = new HashSet<U>();
+        for (final String listener: listeners) {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractUserBaseStreamListener.class.isAssignableFrom(clazz)) {
@@ -198,18 +197,18 @@ public final class StreamHandler implements ConnectorService {
             }
         }
         if (result.size() > 0) {
-            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
-            for (U activeUserListener: result) {
+            final TwitterStream twitterStream = new TwitterStreamFactory(data.getConf()).getInstance();
+            for (final U activeUserListener: result) {
                 twitterStream.addListener(activeUserListener);
             }
-            return new UserStreamHandler(this.commonData, twitterStream);
+            return new UserStreamHandler(data, twitterStream);
         }
         return null;
     }
 
-    private <S extends AbstractSiteBaseStreamListener> SiteStreamHandler buildSiteStreamHandler(String[] listeners) {
-        Set<S> result = new HashSet<S>();
-        for (String listener: listeners) {
+    private <S extends AbstractSiteBaseStreamListener> SiteStreamHandler buildSiteStreamHandler(final String[] listeners) {
+        final Set<S> result = new HashSet<S>();
+        for (final String listener: listeners) {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractSiteBaseStreamListener.class.isAssignableFrom(clazz)) {
@@ -221,18 +220,18 @@ public final class StreamHandler implements ConnectorService {
             }
         }
         if (result.size() > 0) {
-            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
-            for (S activeUserListener: result) {
+            final TwitterStream twitterStream = new TwitterStreamFactory(data.getConf()).getInstance();
+            for (final S activeUserListener: result) {
                 twitterStream.addListener(activeUserListener);
             }
-            return new SiteStreamHandler(this.commonData, twitterStream);
+            return new SiteStreamHandler(data, twitterStream);
         }
         return null;
     }
 
-    private <ST extends AbstractStatusBaseStreamListener> StatusStreamHandler buildStatusStreamHandler(String[] listeners) {
-        Set<ST> result = new HashSet<ST>();
-        for (String listener: listeners) {
+    private <ST extends AbstractStatusBaseStreamListener> StatusStreamHandler buildStatusStreamHandler(final String[] listeners) {
+        final Set<ST> result = new HashSet<ST>();
+        for (final String listener: listeners) {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractStatusBaseStreamListener.class.isAssignableFrom(clazz)) {
@@ -244,11 +243,11 @@ public final class StreamHandler implements ConnectorService {
             }
         }
         if (result.size() > 0) {
-            TwitterStream twitterStream = new TwitterStreamFactory(this.commonData.getConf()).getInstance();
-            for (ST activeUserListener: result) {
+            final TwitterStream twitterStream = new TwitterStreamFactory(data.getConf()).getInstance();
+            for (final ST activeUserListener: result) {
                 twitterStream.addListener(activeUserListener);
             }
-            return new StatusStreamHandler(this.commonData, twitterStream);
+            return new StatusStreamHandler(data, twitterStream);
         }
         return null;
     }
@@ -275,10 +274,10 @@ public final class StreamHandler implements ConnectorService {
     @Override
     public void start()
         throws Exception {
-        final Binding b = commonData.getPostOffice().getBinding(new SimpleString(commonData.getQueueName()));
-        if (b == null) { throw new Exception(connectorName + ": queue " + commonData.getQueueName()
+        final Binding b = data.getPostOffice().getBinding(new SimpleString(data.getQueueName()));
+        if (b == null) { throw new Exception(connectorName + ": queue " + data.getQueueName()
                     + " not found"); }
-        if (this.streamHandlers == null || streamHandlers.size() < 1) {
+        if (streamHandlers == null || streamHandlers.size() < 1) {
             log.error("There is no Listners, can't start the service.");
             return;
         }
@@ -291,7 +290,7 @@ public final class StreamHandler implements ConnectorService {
     protected void startStreaming()
         throws TwitterException {
         if (streamHandlers != null && streamHandlers.size() > 0) {
-            for (BaseStreamHandler activeHandler: streamHandlers) {
+            for (final BaseStreamHandler activeHandler: streamHandlers) {
                 activeHandler.start();
             }
         }
@@ -302,7 +301,7 @@ public final class StreamHandler implements ConnectorService {
         throws Exception {
         if (!isStarted) { return; }
         if (streamHandlers != null && streamHandlers.size() > 0) {
-            for (BaseStreamHandler activeHandler: streamHandlers) {
+            for (final BaseStreamHandler activeHandler: streamHandlers) {
                 activeHandler.stop();
             }
         }

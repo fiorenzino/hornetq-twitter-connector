@@ -1,14 +1,14 @@
 package br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.impl;
 
 import twitter4j.Twitter;
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 import br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.AbstractBaseReclaimLostTweets;
-import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public class ReclaimLostTimeline extends AbstractBaseReclaimLostTweets {
 
-    public ReclaimLostTimeline(final TwitterStreamDataModel dataModel, final MessageSupport message) {
-        super(dataModel, message);
+    public ReclaimLostTimeline(final TwitterStreamDTO data, final MessageQueuing message) {
+        super(data, message);
     }
 
     @Override

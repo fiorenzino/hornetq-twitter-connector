@@ -8,16 +8,16 @@ import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Tweet;
 import twitter4j.Twitter;
-import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
-import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 
 public abstract class AbstractBaseReclaimLostTweets {
 
-    protected final TwitterStreamDataModel data;
-    protected final MessageSupport         message;
+    protected final TwitterStreamDTO data;
+    protected final MessageQueuing   message;
 
-    public AbstractBaseReclaimLostTweets(final TwitterStreamDataModel dataModel, final MessageSupport message) {
-        this.data = dataModel;
+    public AbstractBaseReclaimLostTweets(final TwitterStreamDTO data, final MessageQueuing message) {
+        this.data = data;
         this.message = message;
     }
 

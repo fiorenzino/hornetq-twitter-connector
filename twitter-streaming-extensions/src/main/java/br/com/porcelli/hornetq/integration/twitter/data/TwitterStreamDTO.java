@@ -5,7 +5,7 @@ import org.hornetq.core.postoffice.PostOffice;
 
 import twitter4j.conf.Configuration;
 
-public class TwitterStreamDataModel {
+public class TwitterStreamDTO {
     private final String        queueName;
     private final String        userScreenName;
     private final int           userId;
@@ -21,7 +21,7 @@ public class TwitterStreamDataModel {
     private final int[]         userIds;
     private final String[]      hashTags;
 
-    public TwitterStreamDataModel(final String queueName,
+    public TwitterStreamDTO(final String queueName,
                                   final String userScreenName,
                                   final int userId,
                                   final String lastTweetQueueName,
@@ -46,14 +46,14 @@ public class TwitterStreamDataModel {
         this.conf = conf;
         this.postOffice = postOffice;
         if (lastTweetQueueName != null) {
-            this.lastFormattedTweetQueueName = new SimpleString(lastTweetQueueName);
+            lastFormattedTweetQueueName = new SimpleString(lastTweetQueueName);
         } else {
-            this.lastFormattedTweetQueueName = null;
+            lastFormattedTweetQueueName = null;
         }
         if (lastDMQueueName != null) {
-            this.lastFormattedDMQueueName = new SimpleString(lastDMQueueName);
+            lastFormattedDMQueueName = new SimpleString(lastDMQueueName);
         } else {
-            this.lastFormattedDMQueueName = null;
+            lastFormattedDMQueueName = null;
         }
 
     }
