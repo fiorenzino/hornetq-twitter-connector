@@ -4,15 +4,18 @@ import org.hornetq.core.logging.Logger;
 import org.hornetq.core.postoffice.PostOffice;
 
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public abstract class AbstractBaseStreamListener {
     private static final Logger          log = Logger
                                                  .getLogger(AbstractBaseStreamListener.class);
 
     private final TwitterStreamDataModel dataModel;
+    protected final MessageSupport       message;
 
-    public AbstractBaseStreamListener(final TwitterStreamDataModel dataModel) {
+    public AbstractBaseStreamListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
         this.dataModel = dataModel;
+        this.message = message;
     }
 
     public PostOffice getPostOffice() {

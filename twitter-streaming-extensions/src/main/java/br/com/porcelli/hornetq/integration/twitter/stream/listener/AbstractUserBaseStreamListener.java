@@ -5,12 +5,13 @@ import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.UserStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public abstract class AbstractUserBaseStreamListener extends
         AbstractBaseStreamListener implements UserStreamListener {
 
-    public AbstractUserBaseStreamListener(final TwitterStreamDataModel dataModel) {
-        super(dataModel);
+    public AbstractUserBaseStreamListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
+        super(dataModel, message);
     }
 
     @Override

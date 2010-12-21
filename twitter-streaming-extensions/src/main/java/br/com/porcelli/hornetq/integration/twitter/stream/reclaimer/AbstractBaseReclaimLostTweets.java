@@ -1,7 +1,5 @@
 package br.com.porcelli.hornetq.integration.twitter.stream.reclaimer;
 
-import org.hornetq.core.server.ServerMessage;
-
 import twitter4j.DirectMessage;
 import twitter4j.Paging;
 import twitter4j.Query;
@@ -10,23 +8,25 @@ import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Tweet;
 import twitter4j.Twitter;
-import twitter4j.TwitterException;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
 import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public abstract class AbstractBaseReclaimLostTweets {
 
     protected final TwitterStreamDataModel data;
+    protected final MessageSupport         message;
 
-    public AbstractBaseReclaimLostTweets(final TwitterStreamDataModel dataModel) {
-        data = dataModel;
+    public AbstractBaseReclaimLostTweets(final TwitterStreamDataModel dataModel, final MessageSupport message) {
+        this.data = dataModel;
+        this.message = message;
     }
 
     public abstract void execute(final Twitter twitter)
-        throws TwitterException;
+        throws Exception;
 
-    protected void loadUserTimeline(final long lastTweetId, final Twitter twitter)
-        throws TwitterException {
+    protected void loadUserTimeline(final Long lastTweetId, final Twitter twitter)
+        throws Exception {
+        if (lastTweetId == null) { return; }
         int page = 1;
         while (true) {
             final Paging paging = new Paging(page, lastTweetId);
@@ -35,43 +35,41 @@ public abstract class AbstractBaseReclaimLostTweets {
                 break;
             }
             for (final Status status: rl) {
-                final ServerMessage msg = MessageSupport.buildMessage(data.getQueueName(), status);
-                MessageSupport.postTweet(data.getPostOffice(), msg, data.getLastTweetQueueName(), status.getId());
+                message.postMessage(status, true);
             }
             page++;
         }
     }
 
-    protected void loadDirectMessages(final long lastTweetId, final Twitter twitter)
-        throws TwitterException {
+    protected void loadDirectMessages(final Integer lastDMId, final Twitter twitter)
+        throws Exception {
+        if (lastDMId == null) { return; }
         int page = 1;
         while (true) {
-            final Paging paging = new Paging(page, lastTweetId);
+            final Paging paging = new Paging(page, (long) lastDMId);
             final ResponseList<DirectMessage> rl = twitter.getDirectMessages(paging);
             if (rl.size() == 0) {
                 break;
             }
             for (final DirectMessage dm: rl) {
-                final ServerMessage msg = MessageSupport.buildMessage(data.getQueueName(), dm);
-                MessageSupport.postDirectMessage(data.getPostOffice(), msg, data.getLastTweetQueueName(), dm.getId());
+                message.postMessage(dm, true);
             }
             page++;
         }
     }
 
     protected void loadQuery(final String query, final Long lastTweetId, final Twitter twitter)
-        throws TwitterException {
+        throws Exception {
+        if (lastTweetId == null) { return; }
         int page = 1;
-        query: while (true) {
+        while (true) {
             final Query qry = new Query(query).sinceId(lastTweetId).page(page);
             final QueryResult qr = twitter.search(qry);
             if (qr.getTweets().size() == 0) {
-                break query;
+                break;
             }
             for (final Tweet activeTweet: qr.getTweets()) {
-                final ServerMessage msg = MessageSupport.buildMessage(data.getQueueName(), activeTweet);
-                MessageSupport
-                    .postTweet(data.getPostOffice(), msg, data.getLastTweetQueueName(), activeTweet.getId());
+                message.postMessage(activeTweet, true);
             }
             page++;
         }
@@ -79,6 +77,10 @@ public abstract class AbstractBaseReclaimLostTweets {
 
     protected Long getLastTweetId() {
         return data.getLastTweetId();
+    }
+
+    protected Integer getLastDMId() {
+        return data.getLastDMId();
     }
 
     protected String getUserScreenName() {

@@ -27,8 +27,8 @@ import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
  */
 public class InternalTwitterConstants implements TwitterConstants {
 
-    public static final String       LAST_ID                       = "last.id";
-    public static final SimpleString LAST_ID_VALUE                 = new SimpleString("last_tweet");
+    public static final SimpleString LAST_TWEET_ID_VALUE           = new SimpleString("last_tweet");
+    public static final SimpleString LAST_DM_ID_VALUE              = new SimpleString("last_dm");
 
     public static final int          DEFAULT_POLLING_INTERVAL_SECS = 10;
     public static final int          DEFAULT_PAGE_SIZE             = 100;
@@ -50,6 +50,7 @@ public class InternalTwitterConstants implements TwitterConstants {
     public static final String       PROP_SCREEN_NAME              = "screenName";
 
     public static final String       PROP_LAST_TWEET_QUEUE_NAME    = "lastTweetQueue";
+    public static final String       PROP_LAST_DM_QUEUE_NAME       = "lastDMQueue";
 
     // STREAM
     public static final String       PROP_STREAM_LISTENERS         = "streamListeners";
@@ -70,6 +71,7 @@ public class InternalTwitterConstants implements TwitterConstants {
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LOST_TWEET_RECLAIMERS);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_SCREEN_NAME);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LAST_TWEET_QUEUE_NAME);
+        ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LAST_DM_QUEUE_NAME);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_HASHTAGS);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_MENTIONED_USERS);
 

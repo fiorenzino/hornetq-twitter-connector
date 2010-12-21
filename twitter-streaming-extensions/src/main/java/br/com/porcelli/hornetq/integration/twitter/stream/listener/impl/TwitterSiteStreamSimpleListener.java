@@ -1,6 +1,6 @@
 package br.com.porcelli.hornetq.integration.twitter.stream.listener.impl;
 
-import org.hornetq.core.server.ServerMessage;
+import org.hornetq.core.logging.Logger;
 
 import twitter4j.DirectMessage;
 import twitter4j.SiteStreamsListener;
@@ -11,21 +11,29 @@ import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public class TwitterSiteStreamSimpleListener extends
         AbstractSiteBaseStreamListener implements SiteStreamsListener {
+    private static final Logger log = Logger
+                                        .getLogger(TwitterSiteStreamSimpleListener.class);
 
-    public TwitterSiteStreamSimpleListener(final TwitterStreamDataModel dataModel) {
-        super(dataModel);
+    public TwitterSiteStreamSimpleListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
+        super(dataModel, message);
     }
 
     @Override
     public void onStatus(final int forUser, final Status status) {
-        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), status);
-        MessageSupport.postTweet(getPostOffice(), msg, getLastTweetQueueName(), status.getId());
+        try {
+            message.postMessage(status, false);
+        } catch (Exception e) {
+            log.error("Error on postMessage", e);
+        }
     }
 
     @Override
     public void onDirectMessage(final int forUser, final DirectMessage directMessage) {
-        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), directMessage);
-        MessageSupport.postDirectMessage(getPostOffice(), msg, getLastTweetQueueName(), directMessage.getId());
+        try {
+            message.postMessage(directMessage, false);
+        } catch (Exception e) {
+            log.error("Error on postMessage", e);
+        }
     }
 
 }

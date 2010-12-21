@@ -1,6 +1,5 @@
 package br.com.porcelli.hornetq.integration.twitter.stream;
 
-import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,34 +33,30 @@ import br.com.porcelli.hornetq.integration.twitter.stream.impl.UserStreamHandler
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
-import br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.AbstractBaseReclaimLostTweets;
+import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
+import br.com.porcelli.hornetq.integration.twitter.support.ReflectionSupport;
 
 public final class StreamHandler implements ConnectorService {
-    private static final Logger                                log       = Logger.getLogger(StreamHandler.class);
+    private static final Logger          log                            = Logger.getLogger(StreamHandler.class);
 
-    private final String                                       connectorName;
+    private final String                 connectorName;
 
-    private final TwitterStreamDataModel                       commonData;
+    private final TwitterStreamDataModel commonData;
 
-    private boolean                                            isStarted = false;
+    private final MessageSupport         message;
 
-    private final Set<BaseStreamHandler>                       streamHandlers;
+    private final Set<BaseStreamHandler> streamHandlers;
 
-    private final Set<? extends AbstractBaseReclaimLostTweets> reclaimersSet;
+    private final Class<?>[]             streamListenersConstructorArgs = new Class<?>[] {TwitterStreamDataModel.class,
+                                                                        MessageSupport.class};
+    private final Object[]               streamListenersInsanceArgs;
+
+    private boolean                      isStarted                      = false;
 
     public StreamHandler(final String connectorName, final Map<String, Object> configuration,
                          final StorageManager storageManager, final PostOffice postOffice) {
 
         this.connectorName = connectorName;
-
-        final String reclaimers = ConfigurationHelper.getStringProperty(
-            InternalTwitterConstants.PROP_STREAM_LISTENERS, null,
-            configuration);
-        if (reclaimers == null || reclaimers.trim().length() == 0) {
-            this.reclaimersSet = null;
-        } else {
-            this.reclaimersSet = buildReclaimers(reclaimers);
-        }
 
         final Configuration conf = new ConfigurationBuilder()
                 .setOAuthConsumerKey(
@@ -93,6 +88,10 @@ public final class StreamHandler implements ConnectorService {
                 InternalTwitterConstants.PROP_LAST_TWEET_QUEUE_NAME, null,
                 configuration);
 
+        final String lastDMQueueName = ConfigurationHelper.getStringProperty(
+            InternalTwitterConstants.PROP_LAST_DM_QUEUE_NAME, null,
+            configuration);
+
         Long lastTweetId = null;
         if (lastTweetQueueName != null) {
             final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastTweetQueueName));
@@ -102,6 +101,20 @@ public final class StreamHandler implements ConnectorService {
                     for (final Iterator<MessageReference> iterator = lastTweetQueue.iterator(); iterator.hasNext();) {
                         final MessageReference msg = iterator.next();
                         lastTweetId = msg.getMessage().getBodyBuffer().readLong() + 1L;
+                    }
+                }
+            }
+        }
+
+        Integer lastDMId = null;
+        if (lastDMQueueName != null) {
+            final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastDMQueueName));
+            if (lastTweetBinding != null) {
+                final Queue lastDMQueue = (Queue) lastTweetBinding.getBindable();
+                if (lastDMQueue.getMessageCount() > 0) {
+                    for (final Iterator<MessageReference> iterator = lastDMQueue.iterator(); iterator.hasNext();) {
+                        final MessageReference msg = iterator.next();
+                        lastDMId = msg.getMessage().getBodyBuffer().readInt() + 1;
                     }
                 }
             }
@@ -133,8 +146,16 @@ public final class StreamHandler implements ConnectorService {
         }
 
         this.commonData =
-            new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastTweetId, mentionedUsers,
-                userIds, hashTags, conf, postOffice);
+            new TwitterStreamDataModel(queueName, userScreenName, userId, lastTweetQueueName, lastDMQueueName, lastTweetId,
+                lastDMId, mentionedUsers, userIds, hashTags, conf, postOffice);
+
+        final String reclaimers = ConfigurationHelper.getStringProperty(
+            InternalTwitterConstants.PROP_LOST_TWEET_RECLAIMERS, null,
+            configuration);
+
+        this.message = new MessageSupport(this.commonData, splitProperty(reclaimers));
+
+        this.streamListenersInsanceArgs = new Object[] {this.commonData, this.message};
 
         final String listenerList =
             ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_STREAM_LISTENERS, null, configuration);
@@ -169,7 +190,8 @@ public final class StreamHandler implements ConnectorService {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractUserBaseStreamListener.class.isAssignableFrom(clazz)) {
-                    result.add(buildInstance((Class<U>) clazz));
+                    result.add(ReflectionSupport.buildInstance((Class<U>) clazz, streamListenersConstructorArgs,
+                        streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
                 log.error("Twitter Stream '" + listener + "' not found");
@@ -191,7 +213,8 @@ public final class StreamHandler implements ConnectorService {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractSiteBaseStreamListener.class.isAssignableFrom(clazz)) {
-                    result.add(buildInstance((Class<S>) clazz));
+                    result.add(ReflectionSupport.buildInstance((Class<S>) clazz, streamListenersConstructorArgs,
+                        streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
                 log.error("Twitter Stream '" + listener + "' not found");
@@ -213,7 +236,8 @@ public final class StreamHandler implements ConnectorService {
             try {
                 final Class<?> clazz = Class.forName(listener);
                 if (AbstractStatusBaseStreamListener.class.isAssignableFrom(clazz)) {
-                    result.add(buildInstance((Class<ST>) clazz));
+                    result.add(ReflectionSupport.buildInstance((Class<ST>) clazz, streamListenersConstructorArgs,
+                        streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
                 log.error("Twitter Stream '" + listener + "' not found");
@@ -227,37 +251,6 @@ public final class StreamHandler implements ConnectorService {
             return new StatusStreamHandler(this.commonData, twitterStream);
         }
         return null;
-    }
-
-    private <R extends AbstractBaseReclaimLostTweets> Set<R> buildReclaimers(final String reclaimers) {
-        final Set<R> result = new HashSet<R>();
-        for (final String activeReclaimer: splitProperty(reclaimers)) {
-            try {
-                final Class<R> clazz = (Class<R>) Class.forName(activeReclaimer);
-                if (AbstractBaseReclaimLostTweets.class.isAssignableFrom(clazz)) {
-                    result.add(buildInstance(clazz));
-                }
-            } catch (final ClassNotFoundException e) {
-                log.error("Twitter Reclaimer '" + activeReclaimer + "' not found");
-            }
-        }
-        if (result.size() > 0) { return result; }
-        return null;
-    }
-
-    private <T> T buildInstance(final Class<T> clazz) {
-        T reclaimer = null;
-        final Class<?>[] constructorArgs = new Class<?>[] {TwitterStreamDataModel.class};
-        final Object[] args = new Object[] {this.commonData};
-        Constructor<T> constructor;
-
-        try {
-            constructor = clazz.getConstructor(constructorArgs);
-            reclaimer = constructor.newInstance(args);
-        } catch (final Exception e) {
-            log.error("Reclaimer '");
-        }
-        return reclaimer;
     }
 
     private int[] userIds(final ResponseList<User> users) {
@@ -291,15 +284,6 @@ public final class StreamHandler implements ConnectorService {
         }
 
         startStreaming();
-        if (commonData.getLastTweetId() != null && reclaimersSet != null) {
-            final Twitter twitter = new TwitterFactory(commonData.getConf()).getInstance();
-            for (AbstractBaseReclaimLostTweets reclaimer: reclaimersSet) {
-                reclaimer.execute(twitter);
-                reclaimer = null;
-            }
-            reclaimersSet.clear();
-            twitter.shutdown();
-        }
 
         isStarted = true;
     }
@@ -322,6 +306,7 @@ public final class StreamHandler implements ConnectorService {
                 activeHandler.stop();
             }
         }
+        message.dispose();
         isStarted = false;
     }
 

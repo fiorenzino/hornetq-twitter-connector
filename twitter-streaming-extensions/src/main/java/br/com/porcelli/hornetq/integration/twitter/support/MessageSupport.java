@@ -1,13 +1,19 @@
 package br.com.porcelli.hornetq.integration.twitter.support;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.Message;
 import org.hornetq.api.core.SimpleString;
+import org.hornetq.api.core.TransportConfiguration;
+import org.hornetq.api.core.client.ClientProducer;
+import org.hornetq.api.core.client.ClientSession;
+import org.hornetq.api.core.client.ClientSessionFactory;
+import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.logging.Logger;
-import org.hornetq.core.postoffice.Binding;
-import org.hornetq.core.postoffice.PostOffice;
-import org.hornetq.core.postoffice.QueueBinding;
-import org.hornetq.core.server.Queue;
+import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.ServerMessage;
-import org.hornetq.core.server.impl.LastValueQueue;
 import org.hornetq.core.server.impl.ServerMessageImpl;
 
 import twitter4j.DirectMessage;
@@ -15,69 +21,160 @@ import twitter4j.GeoLocation;
 import twitter4j.Place;
 import twitter4j.Status;
 import twitter4j.Tweet;
+import twitter4j.Twitter;
+import twitter4j.TwitterFactory;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.TwitterConstants.MessageType;
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
+import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDataModel;
+import br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.AbstractBaseReclaimLostTweets;
 
-public final class MessageSupport {
-    private static final Logger log = Logger
-                                        .getLogger(MessageSupport.class);
+public class MessageSupport {
+    private static final Logger                                log               = Logger
+                                                                                     .getLogger(MessageSupport.class);
+    private final TwitterStreamDataModel                       data;
+    private final Set<? extends AbstractBaseReclaimLostTweets> reclaimersSet;
+    private ClientProducer                                     producerLastTweet = null;
+    private ClientProducer                                     producerLastDM    = null;
+    private ClientSession                                      session           = null;
 
-    private MessageSupport() {}
-
-    public static void postTweet(final PostOffice postOffice, final ServerMessage msg, final String lastTweetQueueName,
-                                 final long id) {
-        try {
-            postOffice.route(msg, false);
-            if (lastTweetQueueName != null) {
-                final ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
-                final Binding bind = postOffice.getBinding(new SimpleString(lastTweetQueueName));
-                if (bind instanceof QueueBinding) {
-                    System.out.println("AHAHAHA111! :D");
-                    Queue queue = ((QueueBinding) bind).getQueue();
-                    if (queue instanceof LastValueQueue) {
-                        ((LastValueQueue) queue).addLast(lastMsg.createReference((LastValueQueue) queue));
-                    } else {
-                        postOffice.route(lastMsg, false);
-                    }
-                } else {
-                    postOffice.route(lastMsg, false);
-                }
-            }
-        } catch (final Exception e) {
-            log.error("Error on MessageSupporter.postTweet", e);
+    public MessageSupport(final TwitterStreamDataModel data, final String[] reclaimers) {
+        this.data = data;
+        if (reclaimers == null) {
+            this.reclaimersSet = null;
+        } else {
+            this.reclaimersSet = buildReclaimers(this.data, reclaimers);
         }
     }
 
-    public static void postDirectMessage(final PostOffice postOffice, final ServerMessage msg, final String lastTweetQueueName,
-                                         final int id) {
-        try {
-            postOffice.route(msg, false);
-            if (lastTweetQueueName != null) {
-                final ServerMessage lastMsg = buildLastTweetMessage(lastTweetQueueName, id);
-                final Binding bind = postOffice.getBinding(new SimpleString(lastTweetQueueName));
-                if (bind instanceof LastValueQueue) {
-                    System.out.println("AHAHAHA! :D");
-                    ((LastValueQueue) bind).add(lastMsg.createReference((LastValueQueue) bind), false, true);
-                } else {
-                    postOffice.route(lastMsg, false);
+    private <R extends AbstractBaseReclaimLostTweets> Set<R> buildReclaimers(final TwitterStreamDataModel data,
+                                                                             final String[] reclaimers) {
+        final Class<?>[] constructorArgs = new Class<?>[] {TwitterStreamDataModel.class, MessageSupport.class};
+        final Object[] args = new Object[] {data, this};
+
+        final Set<R> result = new HashSet<R>();
+        for (final String activeReclaimer: reclaimers) {
+            try {
+                final Class<R> clazz = (Class<R>) Class.forName(activeReclaimer);
+                if (AbstractBaseReclaimLostTweets.class.isAssignableFrom(clazz)) {
+                    result.add(ReflectionSupport.buildInstance(clazz, constructorArgs, args));
                 }
+            } catch (final ClassNotFoundException e) {
+                log.error("Twitter Reclaimer '" + activeReclaimer + "' not found");
             }
-        } catch (final Exception e) {
-            log.error("Error on MessageSupporter.postDirectMessage", e);
+        }
+        if (result.size() == 0) { return null; }
+        return result;
+    }
+
+    public void postMessage(final Status status, boolean isReclaimer)
+        throws Exception {
+        ServerMessage msg = buildMessage(data.getQueueName(), status);
+        internalPostTweet(msg, status.getId(), isReclaimer);
+    }
+
+    public void postMessage(final Tweet tweet, boolean isReclaimer)
+        throws Exception {
+        ServerMessage msg = buildMessage(data.getQueueName(), tweet);
+        internalPostTweet(msg, tweet.getId(), isReclaimer);
+    }
+
+    public void postMessage(final DirectMessage dm, boolean isReclaimer)
+        throws Exception {
+        ServerMessage msg = buildMessage(data.getQueueName(), dm);
+        internalPostDM(msg, dm.getId(), isReclaimer);
+    }
+
+    private void internalPostTweet(final ServerMessage msg, long id, boolean isReclaimer)
+        throws Exception {
+        data.getPostOffice().route(msg, false);
+        postOnLastTweetQueue(id);
+        if (!isReclaimer) {
+            executeReclaimers();
         }
     }
 
-    public static ServerMessage buildLastTweetMessage(final String queueName, final long id) {
-        final ServerMessage msg = new ServerMessageImpl(id, InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
-        msg.setAddress(new SimpleString(queueName));
-        msg.setDurable(true);
-        msg.getBodyBuffer().writeLong(id);
-        msg.putStringProperty("_HQ_LVQ_NAME", "last.tweet.id");
-        return msg;
+    private void internalPostDM(final ServerMessage msg, int id, boolean isReclaimer)
+        throws Exception {
+        data.getPostOffice().route(msg, false);
+        postOnLastDMQueue(id);
+        if (!isReclaimer) {
+            executeReclaimers();
+        }
     }
 
-    public static ServerMessage buildMessage(final String queueName, final Status status) {
+    private void executeReclaimers() {
+        if (reclaimersSet != null && reclaimersSet.size() > 0) {
+            final Twitter twitter = new TwitterFactory(data.getConf()).getInstance();
+            Set<AbstractBaseReclaimLostTweets> executedReclaimers = new HashSet<AbstractBaseReclaimLostTweets>();
+            for (AbstractBaseReclaimLostTweets reclaimer: reclaimersSet) {
+                try {
+                    reclaimer.execute(twitter);
+                    executedReclaimers.add(reclaimer);
+                } catch (Exception e) {
+                    log.error("Couldn't execute reclaimer:" + reclaimer.getClass().getName(), e);
+                }
+            }
+            twitter.shutdown();
+            for (AbstractBaseReclaimLostTweets activeExecutedReclaimer: executedReclaimers) {
+                reclaimersSet.remove(activeExecutedReclaimer);
+                activeExecutedReclaimer = null;
+            }
+        }
+    }
+
+    private void postOnLastTweetQueue(final long id) {
+        if (data.getLastTweetQueueName() != null) {
+            try {
+                if (getSession() != null) {
+                    Message msg = getSession().createMessage(true);
+                    msg.setAddress(data.getFormattedLastTweetQueueName());
+                    msg.getBodyBuffer().writeLong(id);
+                    msg.putStringProperty(Message.HDR_LAST_VALUE_NAME, InternalTwitterConstants.LAST_TWEET_ID_VALUE);
+                    producerLastTweet.send(msg);
+                }
+            } catch (Exception e) {
+                log.error("Error on postLastTweetQueue.", e);
+            }
+        }
+    }
+
+    private void postOnLastDMQueue(final int id) {
+        if (data.getLastDMQueueName() != null) {
+            try {
+                if (getSession() != null) {
+                    Message msg = getSession().createMessage(true);
+                    msg.setAddress(data.getFormattedLastDMQueueName());
+                    msg.getBodyBuffer().writeInt(id);
+                    msg.putStringProperty(Message.HDR_LAST_VALUE_NAME, InternalTwitterConstants.LAST_DM_ID_VALUE);
+                    producerLastDM.send(msg);
+                }
+            } catch (Exception e) {
+                log.error("Error on postLastDMQueue.", e);
+            }
+        }
+    }
+
+    private ClientSession getSession() {
+        if (session != null) { return session; }
+        if (data.getFormattedLastTweetQueueName() == null && data.getFormattedLastDMQueueName() == null) { return null; }
+        try {
+            ClientSessionFactory sf =
+                HornetQClient.createClientSessionFactory(new TransportConfiguration(InVMConnectorFactory.class.getName()));
+            this.session = sf.createSession();
+            if (data.getFormattedLastTweetQueueName() != null) {
+                this.producerLastTweet = session.createProducer(data.getFormattedLastTweetQueueName());
+            }
+            if (data.getFormattedLastDMQueueName() != null) {
+                this.producerLastDM = session.createProducer(data.getFormattedLastDMQueueName());
+            }
+            return session;
+        } catch (HornetQException e) {
+            return null;
+        }
+    }
+
+    private ServerMessage buildMessage(final String queueName, final Status status) {
         final ServerMessage msg =
             new ServerMessageImpl(status.getId(), InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));
@@ -125,7 +222,7 @@ public final class MessageSupport {
         return msg;
     }
 
-    public static ServerMessage buildMessage(final String queueName, final DirectMessage dm) {
+    private ServerMessage buildMessage(final String queueName, final DirectMessage dm) {
 
         final ServerMessage msg = new ServerMessageImpl(dm.getId(), InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));
@@ -150,7 +247,7 @@ public final class MessageSupport {
         return msg;
     }
 
-    public static ServerMessage buildMessage(final String queueName, final Tweet status) {
+    private ServerMessage buildMessage(final String queueName, final Tweet status) {
         final ServerMessage msg =
             new ServerMessageImpl(status.getId(), InternalTwitterConstants.INITIAL_MESSAGE_BUFFER_SIZE);
         msg.setAddress(new SimpleString(queueName));
@@ -179,6 +276,30 @@ public final class MessageSupport {
         }
 
         return msg;
+    }
+
+    public void dispose() {
+        if (producerLastTweet != null) {
+            try {
+                producerLastTweet.close();
+            } catch (HornetQException e) {
+                log.error("Error on producerLastTweet close.", e);
+            }
+        }
+        if (producerLastDM != null) {
+            try {
+                producerLastDM.close();
+            } catch (HornetQException e) {
+                log.error("Error on producerLastDM close.", e);
+            }
+        }
+        if (session != null) {
+            try {
+                session.close();
+            } catch (HornetQException e) {
+                log.error("Error on session close", e);
+            }
+        }
     }
 
 }

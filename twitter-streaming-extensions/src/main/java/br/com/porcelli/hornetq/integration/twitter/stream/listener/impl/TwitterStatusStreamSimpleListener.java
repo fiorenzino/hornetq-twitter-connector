@@ -1,6 +1,6 @@
 package br.com.porcelli.hornetq.integration.twitter.stream.listener.impl;
 
-import org.hornetq.core.server.ServerMessage;
+import org.hornetq.core.logging.Logger;
 
 import twitter4j.Status;
 import twitter4j.StatusListener;
@@ -10,14 +10,19 @@ import br.com.porcelli.hornetq.integration.twitter.support.MessageSupport;
 
 public class TwitterStatusStreamSimpleListener extends
         AbstractStatusBaseStreamListener implements StatusListener {
+    private static final Logger log = Logger
+                                        .getLogger(TwitterStatusStreamSimpleListener.class);
 
-    public TwitterStatusStreamSimpleListener(final TwitterStreamDataModel dataModel) {
-        super(dataModel);
+    public TwitterStatusStreamSimpleListener(final TwitterStreamDataModel dataModel, final MessageSupport message) {
+        super(dataModel, message);
     }
 
     @Override
     public void onStatus(final Status status) {
-        final ServerMessage msg = MessageSupport.buildMessage(getQueueName(), status);
-        MessageSupport.postTweet(getPostOffice(), msg, getLastTweetQueueName(), status.getId());
+        try {
+            message.postMessage(status, false);
+        } catch (Exception e) {
+            log.error("Error on postMessage", e);
+        }
     }
 }
