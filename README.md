@@ -12,6 +12,7 @@ How to use
 
  hornetq-configuration.xml:
 
+	[...]
 	<address-settings>
 		[...]
 		<address-setting match="jms.queue.lastTweetQueueLL">
@@ -21,7 +22,7 @@ How to use
 			<last-value-queue>true</last-value-queue>
 		</address-setting>
 	</address-settings>
-
+	[...]
 	<connector-services>
 		[...]
 		<connector-service name="twitter-streamming">
@@ -38,6 +39,7 @@ How to use
 			<param key="tweetReclaimers" value="br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.impl.ReclaimLostMentionedList;br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.impl.ReclaimLostUserMentions;br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.impl.ReclaimLostDirectMessages"/>
 		</connector-service>
 	</connector-services>
+	[...]
 
   hornetq-jms.xml:
 
