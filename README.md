@@ -1,7 +1,7 @@
 About
 =====
 
-This is a Twitter Connector Service for [HornetQ](http://jboss.org/hornetq). It allows you interact with twitter using HornetQ, wich gives you flexibility and scalability out of the box.
+This is a Twitter Connector Service for [HornetQ](http://jboss.org/hornetq)+. It allows you interact with twitter using HornetQ, wich gives you flexibility and scalability out of the box.
 
 There is two types of Twitter connector, outgoing and stream. Outgoing connector consumes from a configurable address and forwards to twitter. Stream connector consumes from twitter and forwards to a configurable address.
 
@@ -70,12 +70,12 @@ Issue Tracking
 Supported Version:
 =====
 
-* [HornetQ 2.1.2 Final](http://jboss.org/hornetq)
+* [HornetQ 2.1.2 Final](http://jboss.org/hornetq)+
 
 External Dependencies:
 -----
 
-* [Twitter4J version 2.1.8](http://twitter4j.org)
+* [Twitter4J version 2.1.8](http://twitter4j.org)+
 
 
 License
