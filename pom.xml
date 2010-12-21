@@ -17,11 +17,17 @@
 		<name>Alexandre Porcelli</name>
 		<url>http://porcelli.com.br</url>
 	</organization>
+	<licenses>
+		<license>
+			<name>The Apache License, ASL Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 	<properties>
 		<hornetq.version>2.1.2.Final</hornetq.version>
 		<twitter4j.version>2.1.8</twitter4j.version>
 	</properties>
-
 	<repositories>
 		<repository>
 			<id>jboss-public-repository-group</id>
@@ -81,7 +87,6 @@
 				<artifactId>twitter-common-model</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-
 			<!-- Twitter -->
 			<dependency>
 				<groupId>org.twitter4j</groupId>
