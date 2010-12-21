@@ -51,7 +51,7 @@ public class InternalTwitterConstants implements TwitterConstants {
 
     // STREAM
     public static final String       PROP_STREAM_LISTENERS         = "streamListeners";
-    public static final String       PROP_LOST_TWEET_RECLAIMERS    = "lostTweetReclaimers";
+    public static final String       PROP_LOST_TWEET_RECLAIMERS    = "tweetReclaimers";
 
     // FILTER
     public static final String       PROP_MENTIONED_USERS          = "mentionedUsers";
