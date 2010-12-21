@@ -31,7 +31,6 @@ import br.com.porcelli.hornetq.integration.twitter.stream.impl.BaseStreamHandler
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.SiteStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.StatusStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.UserStreamHandler;
-import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
