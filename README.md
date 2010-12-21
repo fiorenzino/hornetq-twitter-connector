@@ -5,7 +5,12 @@ This is a Twitter Connector Service for [HornetQ](http://jboss.org/hornetq). It 
 
 There is two types of Twitter connector, outgoing and stream. Outgoing connector consumes from a configurable address and forwards to twitter. Stream connector consumes from twitter and forwards to a configurable address.
 
-How to use
+Why use HornetQ to interact with Twitter?
+=====
+
+
+
+How to Use
 =====
 
  You just need to add some additional lines on `hornetq-configuration.xml` and `hornetq-jms.xml`. Here you have a sample config that uses the stream connector.
@@ -57,6 +62,32 @@ How to use
 	</queue>
 	[...]
 
+Configuration
+=====
+
+Stream Connector
+-----
+
+Outgoing Connector
+-----
+
+
+Extensions on Stream Connector
+=====
+
+
+
+Consuming Stream Tweets
+=====
+
+
+
+Sending Tweets
+=====
+
+
+
+
 How to Install
 =====
 
@@ -70,12 +101,17 @@ Issue Tracking
 Supported Version:
 =====
 
-* [HornetQ 2.1.2 Final](http://jboss.org/hornetq)
+* [HornetQ version 2.1.2 Final](http://jboss.org/hornetq)
 
 External Dependencies:
 -----
 
 * [Twitter4J version 2.1.8](http://twitter4j.org)
+
+
+Know Issues
+=====
+
 
 
 License

@@ -4,7 +4,7 @@
 	<groupId>br.com.porcelli.hornetq</groupId>
 	<artifactId>twitter.extension</artifactId>
 	<packaging>pom</packaging>
-	<name>Porcelli's HornetQ Twitter Streaming Extension</name>
+	<name>HornetQ Twitter Connector Service Extension</name>
 	<version>1.0.0</version>
 	<url>http://porcelli.com.br</url>
 	<developers>
@@ -56,7 +56,7 @@
 	</repositories>
 	<modules>
 		<module>twitter-common-model</module>
-		<module>twitter-streaming-extensions</module>
+		<module>twitter-connector-service</module>
 	</modules>
 	<build>
 		<plugins>
