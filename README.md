@@ -43,6 +43,7 @@ How to use
 
   hornetq-jms.xml:
 
+	[...]
 	<queue name="lastTweetQueue">
 		<entry name="/queue/lastTweetQueue"/>
 	</queue>
@@ -54,6 +55,7 @@ How to use
 	<queue name="incomingQueueFilter">
 		<entry name="/queue/incomingQueueFilter"/>
 	</queue>
+	[...]
 
 How to Install
 =====
