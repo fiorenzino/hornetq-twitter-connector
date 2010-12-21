@@ -41,12 +41,12 @@ How to use
 
   hornetq-jms.xml:
 
-	<queue name="lastTweetQueueLL">
-		<entry name="/queue/lastTweetQueueLL"/>
+	<queue name="lastTweetQueue">
+		<entry name="/queue/lastTweetQueue"/>
 	</queue>
 
-	<queue name="lastTweetQueueDMZ">
-		<entry name="/queue/lastTweetQueueDMZ"/>
+	<queue name="lastTweetQueueDM">
+		<entry name="/queue/lastTweetQueueDM"/>
 	</queue>
 
 	<queue name="incomingQueueFilter">
