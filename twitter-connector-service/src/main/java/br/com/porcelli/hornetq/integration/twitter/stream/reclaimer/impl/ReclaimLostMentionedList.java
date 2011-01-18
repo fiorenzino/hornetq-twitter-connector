@@ -17,13 +17,15 @@ package br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.impl;
 
 import twitter4j.Twitter;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 import br.com.porcelli.hornetq.integration.twitter.stream.reclaimer.AbstractBaseReclaimLostTweets;
 
 public class ReclaimLostMentionedList extends AbstractBaseReclaimLostTweets {
 
-    public ReclaimLostMentionedList(final TwitterStreamDTO data, final MessageQueuing message) {
-        super(data, message);
+    public ReclaimLostMentionedList(final TwitterStreamDTO data, final MessageQueuing message,
+                                     final ExceptionNotifier exceptionNotifier) {
+        super(data, message, exceptionNotifier);
     }
 
     @Override

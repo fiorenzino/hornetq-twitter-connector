@@ -24,6 +24,8 @@ import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
 
 public class InternalTwitterConstants implements TwitterConstants {
 
+    public static final String       KEY_DISPLAY_COODINATES        = "displayCoodinates";
+
     public static final SimpleString LAST_TWEET_ID_VALUE           = new SimpleString("last_tweet");
     public static final SimpleString LAST_DM_ID_VALUE              = new SimpleString("last_dm");
 
@@ -31,7 +33,7 @@ public class InternalTwitterConstants implements TwitterConstants {
     public static final int          DEFAULT_PAGE_SIZE             = 100;
     public static final int          FIRST_ATTEMPT_PAGE_SIZE       = 1;
     public static final int          START_SINCE_ID                = 1;
-    public static final int          INITIAL_MESSAGE_BUFFER_SIZE   = 70;
+    public static final int          INITIAL_MESSAGE_BUFFER_SIZE   = 256;
 
     public static final Set<String>  ALLOWABLE_STREAM_CONNECTOR_KEYS;
     public static final Set<String>  REQUIRED_STREAM_CONNECTOR_KEYS;
@@ -51,11 +53,14 @@ public class InternalTwitterConstants implements TwitterConstants {
 
     // STREAM
     public static final String       PROP_STREAM_LISTENERS         = "streamListeners";
-    public static final String       PROP_LOST_TWEET_RECLAIMERS    = "tweetReclaimers";
+    public static final String       PROP_TWEET_RECLAIMERS         = "tweetReclaimers";
 
     // FILTER
     public static final String       PROP_MENTIONED_USERS          = "mentionedUsers";
     public static final String       PROP_HASHTAGS                 = "hashtags";
+
+    public static final String       KEY_USER_SENDER_PREFIX        = "sender.";
+    public static final String       KEY_USER_RECIPIENT_PREFIX     = "recipient.";
 
     static {
         ALLOWABLE_STREAM_CONNECTOR_KEYS = new HashSet<String>();
@@ -65,7 +70,7 @@ public class InternalTwitterConstants implements TwitterConstants {
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_STREAM_LISTENERS);
-        ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LOST_TWEET_RECLAIMERS);
+        ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_TWEET_RECLAIMERS);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_SCREEN_NAME);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LAST_TWEET_QUEUE_NAME);
         ALLOWABLE_STREAM_CONNECTOR_KEYS.add(PROP_LAST_DM_QUEUE_NAME);

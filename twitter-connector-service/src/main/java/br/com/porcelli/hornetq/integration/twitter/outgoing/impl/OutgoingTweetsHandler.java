@@ -172,23 +172,20 @@ public class OutgoingTweetsHandler implements Consumer, ConnectorService {
             }
 
             if (message
-                    .containsProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE)) {
+                    .containsProperty(TwitterConstants.KEY_GEO_LATITUDE)) {
                 final double geolat = message
-                        .getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LATITUDE);
+                        .getDoubleProperty(TwitterConstants.KEY_GEO_LATITUDE);
                 final double geolong = message
-                        .getDoubleProperty(TwitterConstants.KEY_GEO_LOCATION_LONGITUDE);
+                        .getDoubleProperty(TwitterConstants.KEY_GEO_LONGITUDE);
                 status.setLocation(new GeoLocation(geolat, geolong));
             }
 
             if (message.containsProperty(TwitterConstants.KEY_PLACE_ID)) {
-                status.setPlaceId(message
-                        .getStringProperty(TwitterConstants.KEY_PLACE_ID));
+                status.setPlaceId(message.getStringProperty(TwitterConstants.KEY_PLACE_ID));
             }
 
-            if (message
-                    .containsProperty(TwitterConstants.KEY_DISPLAY_COODINATES)) {
-                status.setDisplayCoordinates(message
-                        .getBooleanProperty(TwitterConstants.KEY_DISPLAY_COODINATES));
+            if (message.containsProperty(InternalTwitterConstants.KEY_DISPLAY_COODINATES)) {
+                status.setDisplayCoordinates(message.getBooleanProperty(InternalTwitterConstants.KEY_DISPLAY_COODINATES));
             }
 
             // send to Twitter

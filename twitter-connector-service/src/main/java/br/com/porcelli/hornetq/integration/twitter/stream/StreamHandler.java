@@ -15,10 +15,14 @@
  */
 package br.com.porcelli.hornetq.integration.twitter.stream;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.core.logging.Logger;
@@ -41,34 +45,49 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.BaseStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.SiteStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.StatusStreamHandler;
 import br.com.porcelli.hornetq.integration.twitter.stream.impl.UserStreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.stream.jmx.TwitterStreamManagement;
+import br.com.porcelli.hornetq.integration.twitter.stream.jmx.TwitterStreamManagementMBean;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractUserBaseStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.support.ReflectionSupport;
 
 public final class StreamHandler implements ConnectorService {
-    private static final Logger          log                            = Logger.getLogger(StreamHandler.class);
+    private static final Logger                log                            = Logger.getLogger(StreamHandler.class);
 
-    private final String                 connectorName;
+    private final String                       connectorName;
 
-    private final TwitterStreamDTO       data;
+    private final TwitterStreamDTO             data;
 
-    private final MessageQueuing         message;
+    private final MessageQueuing               message;
 
-    private final Set<BaseStreamHandler> streamHandlers;
+    private final Set<BaseStreamHandler>       streamHandlers;
 
-    private final Class<?>[]             streamListenersConstructorArgs = new Class<?>[] {TwitterStreamDTO.class,
-                                                                        MessageQueuing.class};
-    private final Object[]               streamListenersInsanceArgs;
+    private final Class<?>[]                   streamListenersConstructorArgs = new Class<?>[] {TwitterStreamDTO.class,
+                                                                              MessageQueuing.class, ExceptionNotifier.class};
+    private final Object[]                     streamListenersInsanceArgs;
 
-    private boolean                      isStarted                      = false;
+    private boolean                            isStarted                      = false;
+
+    private final TwitterStreamManagementMBean mbean;
 
     public StreamHandler(final String connectorName, final Map<String, Object> configuration,
                          final StorageManager storageManager, final PostOffice postOffice) {
+
+        this.mbean = new TwitterStreamManagement(this);
+
+        try {
+            MBeanServer mbServer = ManagementFactory.getPlatformMBeanServer();
+            ObjectName mbeanName = new ObjectName("org.hornetq:module=ConnectorService,name=twitter_stream");
+            mbServer.registerMBean(mbean, mbeanName);
+        } catch (Exception e) {
+            log.error("Error on registering JMX info.", e);
+        }
 
         this.connectorName = connectorName;
 
@@ -151,7 +170,7 @@ public final class StreamHandler implements ConnectorService {
                 userId = twitter.getId();
                 userIds = userIds(twitter.lookupUsers(mentionedUsers));
             } catch (final TwitterException e) {
-                e.printStackTrace();
+                mbean.notifyException(e);
             } finally {
                 if (twitter != null) {
                     twitter.shutdown();
@@ -164,12 +183,12 @@ public final class StreamHandler implements ConnectorService {
                 lastDMId, mentionedUsers, userIds, hashTags, conf, postOffice);
 
         final String reclaimers = ConfigurationHelper.getStringProperty(
-            InternalTwitterConstants.PROP_LOST_TWEET_RECLAIMERS, null,
+            InternalTwitterConstants.PROP_TWEET_RECLAIMERS, null,
             configuration);
 
-        message = new MessageQueuing(data, splitProperty(reclaimers));
+        message = new MessageQueuing(data, this.mbean, splitProperty(reclaimers));
 
-        streamListenersInsanceArgs = new Object[] {data, message};
+        streamListenersInsanceArgs = new Object[] {data, message, mbean};
 
         final String listenerList =
             ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_STREAM_LISTENERS, null, configuration);
@@ -208,6 +227,7 @@ public final class StreamHandler implements ConnectorService {
                         streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
+                mbean.notifyException(e);
                 log.error("Twitter Stream '" + listener + "' not found");
             }
         }
@@ -231,6 +251,7 @@ public final class StreamHandler implements ConnectorService {
                         streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
+                mbean.notifyException(e);
                 log.error("Twitter Stream '" + listener + "' not found");
             }
         }
@@ -254,6 +275,7 @@ public final class StreamHandler implements ConnectorService {
                         streamListenersInsanceArgs));
                 }
             } catch (final ClassNotFoundException e) {
+                mbean.notifyException(e);
                 log.error("Twitter Stream '" + listener + "' not found");
             }
         }
@@ -289,17 +311,21 @@ public final class StreamHandler implements ConnectorService {
     @Override
     public void start()
         throws Exception {
-        final Binding b = data.getPostOffice().getBinding(new SimpleString(data.getQueueName()));
-        if (b == null) { throw new Exception(connectorName + ": queue " + data.getQueueName()
-                    + " not found"); }
-        if (streamHandlers == null || streamHandlers.size() < 1) {
-            log.error("There is no Listners, can't start the service.");
-            return;
+        try {
+            final Binding b = data.getPostOffice().getBinding(new SimpleString(data.getQueueName()));
+            if (b == null) { throw new Exception(connectorName + ": queue " + data.getQueueName()
+                        + " not found"); }
+            if (streamHandlers == null || streamHandlers.size() < 1) {
+                log.error("There is no Listners, can't start the service.");
+                return;
+            }
+
+            startStreaming();
+
+            isStarted = true;
+        } catch (Exception e) {
+            mbean.notifyException(e);
         }
-
-        startStreaming();
-
-        isStarted = true;
     }
 
     protected void startStreaming()
@@ -314,18 +340,39 @@ public final class StreamHandler implements ConnectorService {
     @Override
     public void stop()
         throws Exception {
-        if (!isStarted) { return; }
-        if (streamHandlers != null && streamHandlers.size() > 0) {
-            for (final BaseStreamHandler activeHandler: streamHandlers) {
-                activeHandler.stop();
+        try {
+            if (!isStarted) { return; }
+            if (streamHandlers != null && streamHandlers.size() > 0) {
+                for (final BaseStreamHandler activeHandler: streamHandlers) {
+                    activeHandler.stop();
+                }
             }
+            message.dispose();
+            isStarted = false;
+        } catch (Exception e) {
+            mbean.notifyException(e);
         }
-        message.dispose();
-        isStarted = false;
     }
 
     @Override
     public boolean isStarted() {
         return isStarted;
     }
+
+    public long getDMCount() {
+        return message.getDMCount();
+    }
+
+    public long getStatusCount() {
+        return message.getStatusCount();
+    }
+
+    public long getTweetCount() {
+        return message.getTweetCount();
+    }
+
+    public long getTotalCount() {
+        return message.getTotalCount();
+    }
+
 }

@@ -9,7 +9,7 @@ There are two types of twitter connectors, outgoing and stream. Outgoing connect
 Why HornetQ to interact with Twitter?
 =====
 
-HornetQ is 
+HornetQ is [*The Performance Leader in Enterprise Messaging*](http://community.jboss.org/wiki/HornetQ-thePerformanceLeaderinEnterpriseMessaging)
 
 
 How to Use
@@ -66,6 +66,8 @@ How to Use
 
 Configuration
 =====
+
+Here you can check the available properties
 
 Stream Connector
 -----

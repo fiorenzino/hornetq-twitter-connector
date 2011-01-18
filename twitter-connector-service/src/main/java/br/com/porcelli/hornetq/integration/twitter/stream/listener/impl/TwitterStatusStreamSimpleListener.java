@@ -20,6 +20,7 @@ import org.hornetq.core.logging.Logger;
 import twitter4j.Status;
 import twitter4j.StatusListener;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractStatusBaseStreamListener;
 
@@ -28,8 +29,9 @@ public class TwitterStatusStreamSimpleListener extends
     private static final Logger log = Logger
                                         .getLogger(TwitterStatusStreamSimpleListener.class);
 
-    public TwitterStatusStreamSimpleListener(final TwitterStreamDTO data, final MessageQueuing message) {
-        super(data, message);
+    public TwitterStatusStreamSimpleListener(final TwitterStreamDTO data, final MessageQueuing message,
+                                             final ExceptionNotifier exceptionNotifier) {
+        super(data, message, exceptionNotifier);
     }
 
     @Override
@@ -37,6 +39,7 @@ public class TwitterStatusStreamSimpleListener extends
         try {
             message.postMessage(status, false);
         } catch (final Exception e) {
+            exceptionNotifier.notifyException(e);
             log.error("Error on postMessage", e);
         }
     }

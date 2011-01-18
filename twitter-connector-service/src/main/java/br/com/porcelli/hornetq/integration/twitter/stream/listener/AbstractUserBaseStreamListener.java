@@ -16,49 +16,65 @@
 package br.com.porcelli.hornetq.integration.twitter.stream.listener;
 
 import twitter4j.Status;
+import twitter4j.StatusDeletionNotice;
 import twitter4j.User;
 import twitter4j.UserList;
 import twitter4j.UserStreamListener;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 
 public abstract class AbstractUserBaseStreamListener extends
         AbstractBaseStreamListener implements UserStreamListener {
 
-    public AbstractUserBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message) {
-        super(data, message);
+    public AbstractUserBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message,
+                                          final ExceptionNotifier exceptionNotifier) {
+        super(data, message, exceptionNotifier);
     }
 
     @Override
-    public void onFavorite(final User arg0, final User arg1, final Status arg2) {}
+    public void onFavorite(final User source, final User target, final Status favoritedStatus) {}
 
     @Override
-    public void onFollow(final User arg0, final User arg1) {}
+    public void onFollow(final User source, final User followedUser) {}
 
     @Override
-    public void onFriendList(final int[] arg0) {}
+    public void onFriendList(final int[] friendIds) {}
 
     @Override
-    public void onBlock(final User arg0, final User arg1) {}
+    public void onBlock(final User source, final User blockedUser) {}
 
     @Override
-    public void onUnblock(final User arg0, final User arg1) {}
+    public void onUnblock(final User source, final User unblockedUser) {}
 
     @Override
-    public void onUnfavorite(final User arg0, final User arg1, final Status arg2) {}
+    public void onUnfavorite(final User source, final User target, final Status unfavoritedStatus) {}
 
     @Override
-    public void onUnfollow(final User arg0, final User arg1) {}
+    public void onDeletionNotice(final StatusDeletionNotice statusDeletionNotice) {}
 
     @Override
-    public void onUserListCreated(final User arg0, final UserList arg1) {}
+    public void onScrubGeo(final int userId, final long upToStatusId) {}
 
     @Override
-    public void onUserListDestroyed(final User arg0, final UserList arg1) {}
+    public void onTrackLimitationNotice(final int numberOfLimitedStatuses) {}
 
     @Override
-    public void onUserListSubscribed(final User arg0, final User arg1, final UserList arg2) {}
+    public void onDeletionNotice(final long directMessageId, final int userId) {}
 
     @Override
-    public void onUserListUpdated(final User arg0, final UserList arg1) {}
+    public void onUserListCreation(final User listOwner, final UserList list) {}
+
+    @Override
+    public void onUserListDeletion(final User listOwner, final UserList list) {}
+
+    @Override
+    public void onUserListSubscription(final User subscriber, final User listOwner, final UserList list) {}
+
+    @Override
+    public void onUserListUpdate(final User listOwner, final UserList list) {}
+
+    @Override
+    public void onUserProfileUpdate(final User updatedUser) {}
+
 }

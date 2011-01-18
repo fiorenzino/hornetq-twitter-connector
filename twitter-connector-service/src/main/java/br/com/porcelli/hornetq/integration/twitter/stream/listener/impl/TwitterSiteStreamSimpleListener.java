@@ -21,16 +21,17 @@ import twitter4j.DirectMessage;
 import twitter4j.SiteStreamsListener;
 import twitter4j.Status;
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 import br.com.porcelli.hornetq.integration.twitter.stream.listener.AbstractSiteBaseStreamListener;
 
 public class TwitterSiteStreamSimpleListener extends
         AbstractSiteBaseStreamListener implements SiteStreamsListener {
-    private static final Logger log = Logger
-                                        .getLogger(TwitterSiteStreamSimpleListener.class);
+    private static final Logger log = Logger.getLogger(TwitterSiteStreamSimpleListener.class);
 
-    public TwitterSiteStreamSimpleListener(final TwitterStreamDTO data, final MessageQueuing message) {
-        super(data, message);
+    public TwitterSiteStreamSimpleListener(final TwitterStreamDTO data, final MessageQueuing message,
+                                           final ExceptionNotifier exceptionNotifier) {
+        super(data, message, exceptionNotifier);
     }
 
     @Override
@@ -38,6 +39,7 @@ public class TwitterSiteStreamSimpleListener extends
         try {
             message.postMessage(status, false);
         } catch (final Exception e) {
+            exceptionNotifier.notifyException(e);
             log.error("Error on postMessage", e);
         }
     }
@@ -47,6 +49,7 @@ public class TwitterSiteStreamSimpleListener extends
         try {
             message.postMessage(directMessage, false);
         } catch (final Exception e) {
+            exceptionNotifier.notifyException(e);
             log.error("Error on postMessage", e);
         }
     }

@@ -19,18 +19,22 @@ import org.hornetq.core.logging.Logger;
 import org.hornetq.core.postoffice.PostOffice;
 
 import br.com.porcelli.hornetq.integration.twitter.data.TwitterStreamDTO;
+import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 import br.com.porcelli.hornetq.integration.twitter.stream.MessageQueuing;
 
 public abstract class AbstractBaseStreamListener {
-    private static final Logger    log = Logger
+    private static final Logger       log = Logger
                                                  .getLogger(AbstractBaseStreamListener.class);
 
-    private final TwitterStreamDTO data;
-    protected final MessageQueuing message;
+    private final TwitterStreamDTO    data;
+    protected final ExceptionNotifier exceptionNotifier;
+    protected final MessageQueuing    message;
 
-    public AbstractBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message) {
+    public AbstractBaseStreamListener(final TwitterStreamDTO data, final MessageQueuing message,
+                                      final ExceptionNotifier exceptionNotifier) {
         this.data = data;
         this.message = message;
+        this.exceptionNotifier = exceptionNotifier;
     }
 
     public PostOffice getPostOffice() {
@@ -50,6 +54,7 @@ public abstract class AbstractBaseStreamListener {
     }
 
     public void onException(final Exception ex) {
+        exceptionNotifier.notifyException(ex);
         log.error("Got AbstractBaseStreamListener.onException", ex);
     }
 

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.hornetq.core.logging.Logger;
 import org.hornetq.core.persistence.StorageManager;
 import org.hornetq.core.postoffice.PostOffice;
 import org.hornetq.core.server.ConnectorService;
@@ -27,8 +28,8 @@ import org.hornetq.core.server.ConnectorServiceFactory;
 import br.com.porcelli.hornetq.integration.twitter.data.InternalTwitterConstants;
 import br.com.porcelli.hornetq.integration.twitter.stream.StreamHandler;
 
-public class TwitterStreamConnectorServiceFactory implements
-        ConnectorServiceFactory {
+public class TwitterStreamConnectorServiceFactory implements ConnectorServiceFactory {
+
     @Override
     public ConnectorService createConnectorService(final String connectorName, final Map<String, Object> configuration,
                                                    final StorageManager storageManager, final PostOffice postOffice,
