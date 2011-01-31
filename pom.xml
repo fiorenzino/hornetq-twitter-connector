@@ -26,7 +26,7 @@
 	</licenses>
 	<properties>
 		<hornetq.version>2.1.2.Final</hornetq.version>
-		<twitter4j.version>2.1.10</twitter4j.version>
+		<twitter4j.version>2.1.11</twitter4j.version>
 	</properties>
 	<repositories>
 		<repository>

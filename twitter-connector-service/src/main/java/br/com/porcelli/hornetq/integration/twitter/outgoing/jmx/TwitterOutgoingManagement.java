@@ -13,57 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package br.com.porcelli.hornetq.integration.twitter.stream.jmx;
+package br.com.porcelli.hornetq.integration.twitter.outgoing.jmx;
 
 import br.com.porcelli.hornetq.integration.twitter.jmx.BaseExceptionNotifierImpl;
-import br.com.porcelli.hornetq.integration.twitter.stream.StreamHandler;
+import br.com.porcelli.hornetq.integration.twitter.outgoing.impl.OutgoingTwitterHandler;
 
-public class TwitterStreamManagement extends BaseExceptionNotifierImpl implements
-    TwitterStreamManagementMBean {
+public class TwitterOutgoingManagement extends BaseExceptionNotifierImpl implements
+    TwitterOutgoingManagementMBean {
 
-    private final StreamHandler streamHandler;
+    private final OutgoingTwitterHandler outgoingHandler;
 
-    public TwitterStreamManagement(StreamHandler streamHandler) {
-        this.streamHandler = streamHandler;
+    public TwitterOutgoingManagement(OutgoingTwitterHandler outgoingHandler) {
+        this.outgoingHandler = outgoingHandler;
     }
 
     @Override
-    public long getDMCount() {
-        return streamHandler.getDMCount();
+    public long getDMSent() {
+        return outgoingHandler.getDMSent();
     }
 
     @Override
-    public long getStatusCount() {
-        return streamHandler.getStatusCount();
+    public long getTweetSent() {
+        return outgoingHandler.getTweetSent();
     }
 
     @Override
-    public long getTweetCount() {
-        return streamHandler.getTweetCount();
-    }
-
-    @Override
-    public long getTotalCount() {
-        return streamHandler.getTotalCount();
+    public long getTotalSent() {
+        return outgoingHandler.getTotalSent();
     }
 
     @Override
     public void start()
         throws Exception {
-        streamHandler.start();
+        outgoingHandler.start();
     }
 
     @Override
     public void stop()
         throws Exception {
-        streamHandler.stop();
+        outgoingHandler.stop();
     }
 
     @Override
     public void restart()
         throws Exception {
-        streamHandler.stop();
-        streamHandler.start();
+        outgoingHandler.stop();
+        outgoingHandler.start();
     }
 
 }

@@ -71,4 +71,15 @@ public abstract class AbstractSiteBaseStreamListener extends
     @Override
     public void onUserProfileUpdate(final int forUser, final User updatedUser) {}
 
+    @Override
+    public void onUnfollow(int arg0, User arg1, User arg2) {}
+
+    @Override
+    public void onUserListMemberAddition(int arg0, User arg1, User arg2, UserList arg3) {}
+
+    @Override
+    public void onUserListMemberDeletion(int arg0, User arg1, User arg2, UserList arg3) {}
+
+    @Override
+    public void onUserListUnsubscription(int arg0, User arg1, User arg2, UserList arg3) {}
 }

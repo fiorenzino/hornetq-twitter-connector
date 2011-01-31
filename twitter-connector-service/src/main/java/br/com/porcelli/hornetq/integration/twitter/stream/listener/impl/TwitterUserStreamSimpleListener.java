@@ -58,4 +58,5 @@ public class TwitterUserStreamSimpleListener extends
 
     @Override
     public void onRetweet(final User source, final User target, final Status retweetedStatus) {}
+
 }

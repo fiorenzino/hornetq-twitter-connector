@@ -72,24 +72,24 @@ public final class StreamHandler implements ConnectorService {
                                                                               MessageQueuing.class, ExceptionNotifier.class};
     private final Object[]                     streamListenersInsanceArgs;
 
-    private boolean                            isStarted                      = false;
-
     private final TwitterStreamManagementMBean mbean;
+
+    private boolean                            isStarted                      = false;
 
     public StreamHandler(final String connectorName, final Map<String, Object> configuration,
                          final StorageManager storageManager, final PostOffice postOffice) {
+
+        this.connectorName = connectorName;
 
         this.mbean = new TwitterStreamManagement(this);
 
         try {
             MBeanServer mbServer = ManagementFactory.getPlatformMBeanServer();
-            ObjectName mbeanName = new ObjectName("org.hornetq:module=ConnectorService,name=twitter_stream");
+            ObjectName mbeanName = new ObjectName("org.hornetq:module=ConnectorService,name=" + connectorName);
             mbServer.registerMBean(mbean, mbeanName);
         } catch (Exception e) {
             log.error("Error on registering JMX info.", e);
         }
-
-        this.connectorName = connectorName;
 
         final Configuration conf = new ConfigurationBuilder()
                 .setOAuthConsumerKey(
@@ -126,7 +126,7 @@ public final class StreamHandler implements ConnectorService {
             configuration);
 
         Long lastTweetId = null;
-        if (lastTweetQueueName != null) {
+        if (lastTweetQueueName != null && lastTweetQueueName.trim().length() > 0) {
             final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastTweetQueueName));
             if (lastTweetBinding != null) {
                 final Queue lastTweetQueue = (Queue) lastTweetBinding.getBindable();
@@ -140,7 +140,7 @@ public final class StreamHandler implements ConnectorService {
         }
 
         Integer lastDMId = null;
-        if (lastDMQueueName != null) {
+        if (lastDMQueueName != null && lastDMQueueName.trim().length() > 0) {
             final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastDMQueueName));
             if (lastTweetBinding != null) {
                 final Queue lastDMQueue = (Queue) lastTweetBinding.getBindable();
@@ -153,10 +153,9 @@ public final class StreamHandler implements ConnectorService {
             }
         }
 
-        final String[] mentionedUsers = splitProperty(ConfigurationHelper
-            .getStringProperty(
-                    InternalTwitterConstants.PROP_MENTIONED_USERS, null,
-                    configuration));
+        final String[] mentionedUsers =
+            splitProperty(ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_MENTIONED_USERS, null,
+                configuration));
 
         final String[] hashTags =
             splitProperty(ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_HASHTAGS, null, configuration));
@@ -179,12 +178,11 @@ public final class StreamHandler implements ConnectorService {
         }
 
         data =
-            new TwitterStreamDTO(queueName, userScreenName, userId, lastTweetQueueName, lastDMQueueName, lastTweetId,
-                lastDMId, mentionedUsers, userIds, hashTags, conf, postOffice);
+            new TwitterStreamDTO(queueName, userScreenName, userId, lastTweetQueueName, lastDMQueueName, lastTweetId, lastDMId,
+                mentionedUsers, userIds, hashTags, conf, postOffice);
 
-        final String reclaimers = ConfigurationHelper.getStringProperty(
-            InternalTwitterConstants.PROP_TWEET_RECLAIMERS, null,
-            configuration);
+        final String reclaimers =
+            ConfigurationHelper.getStringProperty(InternalTwitterConstants.PROP_TWEET_RECLAIMERS, null, configuration);
 
         message = new MessageQueuing(data, this.mbean, splitProperty(reclaimers));
 

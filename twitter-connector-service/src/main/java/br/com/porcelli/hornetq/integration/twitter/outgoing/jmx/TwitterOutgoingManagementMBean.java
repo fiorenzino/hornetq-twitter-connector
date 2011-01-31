@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package br.com.porcelli.hornetq.integration.twitter.stream.jmx;
+package br.com.porcelli.hornetq.integration.twitter.outgoing.jmx;
 
 import br.com.porcelli.hornetq.integration.twitter.jmx.ExceptionNotifier;
 
-public interface TwitterStreamManagementMBean extends ExceptionNotifier {
+public interface TwitterOutgoingManagementMBean extends ExceptionNotifier {
 
-    public long getDMCount();
+    public long getDMSent();
 
-    public long getStatusCount();
+    public long getTweetSent();
 
-    public long getTweetCount();
-
-    public long getTotalCount();
+    public long getTotalSent();
 
     public void start()
         throws Exception;

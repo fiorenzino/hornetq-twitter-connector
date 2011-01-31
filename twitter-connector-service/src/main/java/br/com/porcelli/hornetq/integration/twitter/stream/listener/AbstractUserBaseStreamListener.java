@@ -77,4 +77,13 @@ public abstract class AbstractUserBaseStreamListener extends
     @Override
     public void onUserProfileUpdate(final User updatedUser) {}
 
+    @Override
+    public void onUserListMemberAddition(User arg0, User arg1, UserList arg2) {}
+
+    @Override
+    public void onUserListMemberDeletion(User arg0, User arg1, UserList arg2) {}
+
+    @Override
+    public void onUserListUnsubscription(User arg0, User arg1, UserList arg2) {}
+
 }

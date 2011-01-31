@@ -20,11 +20,7 @@ import java.util.Set;
 
 import org.hornetq.api.core.SimpleString;
 
-import br.com.porcelli.hornetq.integration.twitter.TwitterConstants;
-
-public class InternalTwitterConstants implements TwitterConstants {
-
-    public static final String       KEY_DISPLAY_COODINATES        = "displayCoodinates";
+public class InternalTwitterConstants {
 
     public static final SimpleString LAST_TWEET_ID_VALUE           = new SimpleString("last_tweet");
     public static final SimpleString LAST_DM_ID_VALUE              = new SimpleString("last_dm");
@@ -59,8 +55,12 @@ public class InternalTwitterConstants implements TwitterConstants {
     public static final String       PROP_MENTIONED_USERS          = "mentionedUsers";
     public static final String       PROP_HASHTAGS                 = "hashtags";
 
-    public static final String       KEY_USER_SENDER_PREFIX        = "sender.";
-    public static final String       KEY_USER_RECIPIENT_PREFIX     = "recipient.";
+    //Output
+    public static final String       PROP_ERROR_QUEUE_NAME         = "errorQueue";
+    public static final String       PROP_SENT_QUEUE_NAME          = "sentQueue";
+
+    public static final String       KEY_USER_SENDER_PREFIX        = "sender_";
+    public static final String       KEY_USER_RECIPIENT_PREFIX     = "recipient_";
 
     static {
         ALLOWABLE_STREAM_CONNECTOR_KEYS = new HashSet<String>();
@@ -90,6 +90,8 @@ public class InternalTwitterConstants implements TwitterConstants {
         ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN);
         ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_ACCESS_TOKEN_SECRET);
         ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_QUEUE_NAME);
+        ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_ERROR_QUEUE_NAME);
+        ALLOWABLE_OUTGOING_CONNECTOR_KEYS.add(PROP_SENT_QUEUE_NAME);
 
         REQUIRED_OUTGOING_CONNECTOR_KEYS = new HashSet<String>();
         REQUIRED_OUTGOING_CONNECTOR_KEYS.add(PROP_CONSUMER_KEY);
