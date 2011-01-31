@@ -110,7 +110,7 @@ Supported Version:
 External Dependencies:
 -----
 
-* [Twitter4J version 2.1.8](http://twitter4j.org)
+* [Twitter4J version 2.1.11](http://twitter4j.org)
 
 
 Know Issues
