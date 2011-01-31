@@ -131,24 +131,34 @@ public final class StreamHandler implements ConnectorService {
             if (lastTweetBinding != null) {
                 final Queue lastTweetQueue = (Queue) lastTweetBinding.getBindable();
                 if (lastTweetQueue.getMessageCount() > 0) {
+                    long ltweetId = Long.MIN_VALUE;
                     for (final Iterator<MessageReference> iterator = lastTweetQueue.iterator(); iterator.hasNext();) {
                         final MessageReference msg = iterator.next();
-                        lastTweetId = msg.getMessage().getBodyBuffer().readLong() + 1L;
+                        lastTweetId = msg.getMessage().getBodyBuffer().readLong();
+                        if (lastTweetId > ltweetId) {
+                            ltweetId = lastTweetId;
+                        }
                     }
+                    lastTweetId = ltweetId + 1L;
                 }
             }
         }
 
-        Integer lastDMId = null;
+        Long lastDMId = null;
         if (lastDMQueueName != null && lastDMQueueName.trim().length() > 0) {
             final Binding lastTweetBinding = postOffice.getBinding(new SimpleString(lastDMQueueName));
             if (lastTweetBinding != null) {
                 final Queue lastDMQueue = (Queue) lastTweetBinding.getBindable();
                 if (lastDMQueue.getMessageCount() > 0) {
+                    long ldmId = Long.MIN_VALUE;
                     for (final Iterator<MessageReference> iterator = lastDMQueue.iterator(); iterator.hasNext();) {
                         final MessageReference msg = iterator.next();
-                        lastDMId = msg.getMessage().getBodyBuffer().readInt() + 1;
+                        lastDMId = msg.getMessage().getBodyBuffer().readLong();
+                        if (lastDMId > ldmId) {
+                            ldmId = lastDMId;
+                        }
                     }
+                    lastDMId = ldmId + 1L;
                 }
             }
         }

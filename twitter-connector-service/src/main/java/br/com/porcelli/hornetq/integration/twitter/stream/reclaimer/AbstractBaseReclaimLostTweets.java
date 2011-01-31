@@ -64,13 +64,13 @@ public abstract class AbstractBaseReclaimLostTweets {
         }
     }
 
-    protected void loadDirectMessages(final Integer lastDMId, final Twitter twitter)
+    protected void loadDirectMessages(final Long lastDMId, final Twitter twitter)
         throws Exception {
         try {
             if (lastDMId == null) { return; }
             int page = 1;
             while (true) {
-                final Paging paging = new Paging(page, (long) lastDMId);
+                final Paging paging = new Paging(page, lastDMId);
                 final ResponseList<DirectMessage> rl = twitter.getDirectMessages(paging);
                 if (rl.size() == 0) {
                     break;
@@ -110,7 +110,7 @@ public abstract class AbstractBaseReclaimLostTweets {
         return data.getLastTweetId();
     }
 
-    protected Integer getLastDMId() {
+    protected Long getLastDMId() {
         return data.getLastDMId();
     }
 

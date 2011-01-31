@@ -31,7 +31,7 @@ public class TwitterStreamDTO {
     private final Configuration conf;
     private final PostOffice    postOffice;
     private final Long          lastTweetId;
-    private final Integer       lastDMId;
+    private final Long          lastDMId;
     private final String[]      mentionedUsers;
     private final int[]         userIds;
     private final String[]      hashTags;
@@ -42,7 +42,7 @@ public class TwitterStreamDTO {
                                   final String lastTweetQueueName,
                                   final String lastDMQueueName,
                                   final Long lastTweetId,
-                                  final Integer lastDMId,
+                                  final Long lastDMId,
                                   final String[] mentionedUsers,
                                   final int[] userIds,
                                   final String[] hashTags,
@@ -105,7 +105,7 @@ public class TwitterStreamDTO {
         return lastTweetId;
     }
 
-    public Integer getLastDMId() {
+    public Long getLastDMId() {
         return lastDMId;
     }
 
